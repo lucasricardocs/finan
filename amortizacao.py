@@ -186,7 +186,7 @@ st.markdown(
 )
 
 # --- Seção de Parâmetros ---
-st.markdown("<div class='section-card'>", unsafe_allow_html=True)
+#st.markdown("<div class='section-card'>", unsafe_allow_html=True)
 st.markdown("<div class='section-title'>Parâmetros da Simulação</div>", unsafe_allow_html=True)
 
 param_col1, param_col2 = st.columns(2)
