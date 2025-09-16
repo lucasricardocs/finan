@@ -205,7 +205,7 @@ with tab3:
     with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
         df_normal.to_excel(writer, sheet_name="Sem_Amortizacao", index=False)
         df_com_amortizacao.to_excel(writer, sheet_name="Com_Amortizacao", index=False)
-        writer.save()
+        # não precisa mais de writer.save()
     st.download_button(
         label="📥 Baixar Simulação em Excel",
         data=buffer,
@@ -213,5 +213,16 @@ with tab3:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-# Rodapé
-st.mark
+# -------------------------------
+# Rodapé estilizado
+st.markdown(
+    f"""
+    <hr style="border:1px solid {UBS_GRAY_DARK}; margin-top:40px; margin-bottom:20px;">
+    <div style="text-align:center; color:{UBS_GRAY_DARK}; font-size:14px;">
+        🏦 <b>Simulador de Financiamento UBS Corretora</b><br>
+        Desenvolvido em <span style="color:{UBS_RED};">Python</span> + 
+        <span style="color:#FF4B4B;">Streamlit</span> | © {datetime.today().year}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
