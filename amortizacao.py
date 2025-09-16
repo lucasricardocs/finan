@@ -3,6 +3,7 @@ import pandas as pd
 import altair as alt
 from datetime import datetime, timedelta
 import io
+import numpy as np
 
 # -------------------------------
 # Cores UBS Corretora
@@ -44,9 +45,13 @@ def calcular_sac(valor_financiado, taxa_juros, prazo_meses, amortizacao_extra=0)
         amortizacao = amortizacao_mensal
         parcela = juros + amortizacao
 
-        # Adiciona amortização extra mensal
+        # Seguro aproximado 0.044% do saldo
+        seguro = saldo_devedor * 0.00044
+        taxa_admin = 25.0
+
+        # Adiciona amortização extra
         amortizacao_total = amortizacao + amortizacao_extra
-        parcela_total = juros + amortizacao_total
+        parcela_total = juros + amortizacao_total + seguro + taxa_admin
 
         saldo_devedor -= amortizacao_total
         if saldo_devedor < 0:
@@ -54,10 +59,10 @@ def calcular_sac(valor_financiado, taxa_juros, prazo_meses, amortizacao_extra=0)
             parcela_total += saldo_devedor
             saldo_devedor = 0
 
-        dados.append([mes, parcela_total, juros, amortizacao_total, saldo_devedor])
+        dados.append([mes, parcela_total, juros, amortizacao_total, saldo_devedor, seguro, taxa_admin])
         mes += 1
 
-    df = pd.DataFrame(dados, columns=["Mês", "Parcela", "Juros", "Amortização", "Saldo_Devedor"])
+    df = pd.DataFrame(dados, columns=["Mês", "Prestação_Total", "Juros", "Amortização", "Saldo_Devedor", "Seguro", "Taxa_Admin"])
     return df
 
 # -------------------------------
@@ -90,33 +95,29 @@ with tab2:
     df_normal = calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra=0)
     df_com_amortizacao = calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra=amortizacao_extra)
     
-    total_normal = df_normal["Parcela"].sum()
-    total_com = df_com_amortizacao["Parcela"].sum()
+    total_normal = df_normal["Prestação_Total"].sum()
+    total_com = df_com_amortizacao["Prestação_Total"].sum()
     economia = total_normal - total_com
     
     # Cards métricas
     st.markdown("### Principais Métricas")
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("💰 Total Sem Extra", f"R$ {total_normal:,.2f}")
     col2.metric("💰 Total Com Extra", f"R$ {total_com:,.2f}", f"Economia R$ {economia:,.2f}")
     col3.metric("⏳ Prazo Original", f"{len(df_normal)} meses")
     col4.metric("⏳ Prazo Final", f"{len(df_com_amortizacao)} meses")
-    
-    # Tabela SAC
-    st.subheader("📋 Tabela de Amortização - Primeiros 24 Meses")
-    st.dataframe(df_com_amortizacao.head(24).style.format({
-        "Parcela":"R${:,.2f}", "Juros":"R${:,.2f}", "Amortização":"R${:,.2f}", "Saldo_Devedor":"R${:,.2f}"
-    }))
+    col5.metric("💵 Amortização Extra Mensal", f"R$ {amortizacao_extra:,.2f}")
 
     # Limite de meses para gráficos
     mes_max = (prazo_anos + 5) * 12
-    
-    # Gráfico Saldo Devedor
+
+    # Dados para gráficos
+    df_normal["Cenário"] = "Sem Extra"
+    df_com_amortizacao["Cenário"] = "Com Extra"
+    df_grafico = pd.concat([df_normal, df_com_amortizacao], ignore_index=True)
+
+    # 1️⃣ Saldo Devedor
     st.subheader("📈 Evolução do Saldo Devedor")
-    df_grafico = pd.concat([
-        df_normal.assign(Cenário="Sem Extra"),
-        df_com_amortizacao.assign(Cenário="Com Extra")
-    ])
     chart_saldo = alt.Chart(df_grafico).mark_line(strokeWidth=3).encode(
         x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
         y="Saldo_Devedor",
@@ -124,12 +125,10 @@ with tab2:
         tooltip=["Mês","Saldo_Devedor","Cenário"]
     ).properties(width=700, height=400)
     st.altair_chart(chart_saldo, use_container_width=True)
-    
-    # Gráfico Composição (Juros x Amortização)
+
+    # 2️⃣ Composição da Parcela
     st.subheader("📊 Composição da Parcela (Juros x Amortização)")
-    df_comp = df_com_amortizacao[df_com_amortizacao["Mês"] <= mes_max]
-    df_comp = df_comp.melt(id_vars="Mês", var_name="Componente", value_name="Valor")
-    
+    df_comp = df_com_amortizacao.melt(id_vars=["Mês"], value_vars=["Juros","Amortização"], var_name="Componente", value_name="Valor")
     chart_comp = alt.Chart(df_comp).mark_area(opacity=0.7).encode(
         x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
         y="Valor",
@@ -137,6 +136,60 @@ with tab2:
         tooltip=["Mês","Componente","Valor"]
     ).properties(width=700, height=400)
     st.altair_chart(chart_comp, use_container_width=True)
+
+    # 3️⃣ Juros Mensais
+    st.subheader("💰 Evolução dos Juros Mensais")
+    chart_juros = alt.Chart(df_grafico).mark_line(strokeWidth=2).encode(
+        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+        y="Juros",
+        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
+        tooltip=["Mês","Juros","Cenário"]
+    ).properties(width=700, height=350)
+    st.altair_chart(chart_juros, use_container_width=True)
+
+    # 4️⃣ Amortização Mensal
+    st.subheader("🎯 Evolução da Amortização Mensal")
+    chart_amort = alt.Chart(df_grafico).mark_bar(opacity=0.7).encode(
+        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+        y="Amortização",
+        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
+        tooltip=["Mês","Amortização","Cenário"]
+    ).properties(width=700, height=350)
+    st.altair_chart(chart_amort, use_container_width=True)
+
+    # 5️⃣ Prestação Total
+    st.subheader("💵 Evolução da Prestação Total")
+    chart_prest = alt.Chart(df_grafico).mark_line(strokeWidth=2).encode(
+        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+        y="Prestação_Total",
+        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
+        tooltip=["Mês","Prestação_Total","Cenário"]
+    ).properties(width=700, height=350)
+    st.altair_chart(chart_prest, use_container_width=True)
+
+    # 6️⃣ Economia Acumulada
+    st.subheader("💸 Economia Acumulada com Amortização Extra")
+    df_grafico["Prestação_Normal"] = df_grafico.apply(lambda x: x["Prestação_Total"] if x["Cenário"]=="Sem Extra" else np.nan, axis=1)
+    df_grafico["Economia"] = df_grafico.apply(lambda x: df_normal.loc[x.name,"Prestação_Total"] - x["Prestação_Total"] if x["Cenário"]=="Com Extra" else 0, axis=1)
+    df_economia = df_grafico[df_grafico["Cenário"]=="Com Extra"].copy()
+    df_economia["Economia_Acum"] = df_economia["Economia"].cumsum()
+    chart_econ = alt.Chart(df_economia).mark_line(strokeWidth=2, color=UBS_RED).encode(
+        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+        y="Economia_Acum",
+        tooltip=["Mês","Economia_Acum"]
+    ).properties(width=700, height=350)
+    st.altair_chart(chart_econ, use_container_width=True)
+
+    # 7️⃣ Composição de Custos
+    st.subheader("📊 Composição de Custos (Juros + Amortização + Seguro + Taxa Admin)")
+    df_custo = df_com_amortizacao.melt(id_vars=["Mês"], value_vars=["Juros","Amortização","Seguro","Taxa_Admin"], var_name="Componente", value_name="Valor")
+    chart_custo = alt.Chart(df_custo).mark_area(opacity=0.7).encode(
+        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+        y="Valor",
+        color=alt.Color("Componente", scale=alt.Scale(range=[UBS_RED, UBS_GRAY_DARK, "#FFA500", "#008000"])),
+        tooltip=["Mês","Componente","Valor"]
+    ).properties(width=700, height=400)
+    st.altair_chart(chart_custo, use_container_width=True)
 
 # --- Tab 3: Exportar ---
 with tab3:
