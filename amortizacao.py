@@ -116,6 +116,17 @@ with tab2:
     df_com_amortizacao["Cenário"] = "Com Extra"
     df_grafico = pd.concat([df_normal, df_com_amortizacao], ignore_index=True)
 
+    # --- Corrigir cálculo da economia ---
+    # Mapear Prestação_Total do cenário sem extra pelo mês
+    prestacao_sem_extra_map = df_normal.set_index("Mês")["Prestação_Total"].to_dict()
+    df_grafico["Prestação_Sem_Extra"] = df_grafico["Mês"].map(prestacao_sem_extra_map)
+    df_grafico["Economia"] = df_grafico.apply(
+        lambda x: x["Prestação_Sem_Extra"] - x["Prestação_Total"] if x["Cenário"]=="Com Extra" else 0,
+        axis=1
+    )
+    df_economia = df_grafico[df_grafico["Cenário"]=="Com Extra"].copy()
+    df_economia["Economia_Acum"] = df_economia["Economia"].cumsum()
+
     # 1️⃣ Saldo Devedor
     st.subheader("📈 Evolução do Saldo Devedor")
     chart_saldo = alt.Chart(df_grafico).mark_line(strokeWidth=3).encode(
@@ -169,10 +180,6 @@ with tab2:
 
     # 6️⃣ Economia Acumulada
     st.subheader("💸 Economia Acumulada com Amortização Extra")
-    df_grafico["Prestação_Normal"] = df_grafico.apply(lambda x: x["Prestação_Total"] if x["Cenário"]=="Sem Extra" else np.nan, axis=1)
-    df_grafico["Economia"] = df_grafico.apply(lambda x: df_normal.loc[x.name,"Prestação_Total"] - x["Prestação_Total"] if x["Cenário"]=="Com Extra" else 0, axis=1)
-    df_economia = df_grafico[df_grafico["Cenário"]=="Com Extra"].copy()
-    df_economia["Economia_Acum"] = df_economia["Economia"].cumsum()
     chart_econ = alt.Chart(df_economia).mark_line(strokeWidth=2, color=UBS_RED).encode(
         x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
         y="Economia_Acum",
@@ -207,5 +214,4 @@ with tab3:
     )
 
 # Rodapé
-st.markdown("---")
-st.markdown("*Simulador de Financiamento - UBS Corretora - Clean & Profissional*")
+st.mark
