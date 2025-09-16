@@ -64,19 +64,48 @@ with col4:
 col5, col6, col7, col8 = st.columns(4)
 
 with col5:
-    amortizacao_mensal_mil = st.number_input(
-        "💵 Amortização Mensal Extra (em milhares R$)",
-        min_value=0.0,
-        max_value=50.0,
-        value=0.0,
-        step=0.5,
-        help="Valor fixo mensal para amortização. Ex: 1 = R$ 1.000"
+    opcao_amortizacao = st.selectbox(
+        "🎯 Tipo de Simulação",
+        ["Valor fixo mensal", "Prazo desejado"],
+        help="Escolha como definir a amortização extra"
     )
+
+with col6:
+    if opcao_amortizacao == "Valor fixo mensal":
+        amortizacao_mensal_mil = st.number_input(
+            "💵 Amortização Mensal Extra (em milhares R$)",
+            min_value=0.0,
+            max_value=50.0,
+            value=0.0,
+            step=0.5,
+            help="Valor fixo mensal para amortização. Ex: 1 = R$ 1.000"
+        )
+        prazo_desejado = None
+    else:
+        prazo_desejado = st.number_input(
+            "⏰ Prazo Desejado (anos)",
+            min_value=5,
+            max_value=tempo_anos-1,
+            value=min(25, tempo_anos-1),
+            step=1,
+            help="Em quantos anos você quer quitar?"
+        )
+        amortizacao_mensal_mil = 0.0
 
 # Converter valores de milhares para reais
 valor_imovel = valor_imovel_mil * 1000
 valor_entrada = valor_entrada_mil * 1000
-amortizacao_mensal = amortizacao_mensal_mil * 1000
+
+# Calcular amortização mensal baseada na opção escolhida
+if opcao_amortizacao == "Prazo desejado" and prazo_desejado:
+    # Calcular amortização necessária para atingir o prazo desejado
+    prazo_meses_desejado = prazo_desejado * 12
+    amortizacao_principal_normal = valor_financiado / tempo_meses
+    amortizacao_principal_desejada = valor_financiado / prazo_meses_desejado
+    amortizacao_mensal = amortizacao_principal_desejada - amortizacao_principal_normal
+    amortizacao_mensal = max(0, amortizacao_mensal)  # Não pode ser negativa
+else:
+    amortizacao_mensal = amortizacao_mensal_mil * 1000
 
 # Cálculos básicos
 valor_financiado = valor_imovel - valor_entrada
@@ -107,7 +136,10 @@ with col3:
     st.metric("Valor Financiado", f"R$ {valor_financiado:,.2f}")
 
 with col4:
-    st.metric("Prazo Total", f"{tempo_anos} anos ({tempo_meses} meses)")
+    if opcao_amortizacao == "Prazo desejado" and prazo_desejado:
+        st.metric("Amortização Extra Necessária", f"R$ {amortizacao_mensal:,.2f}/mês")
+    else:
+        st.metric("Prazo Total", f"{tempo_anos} anos ({tempo_meses} meses)")
 
 # Função para calcular SAC
 def calcular_sac(valor_financiado, tempo_meses, taxa_mensal, amortizacao_extra=0):
@@ -228,77 +260,142 @@ else:
         'Cenário': ['Cenário Atual'] * len(df_normal)
     })
 
-# Gráficos com Altair
+# Gráficos com Altair - ESTÁTICOS e BONITOS
 st.markdown("---")
 st.subheader("📈 Evolução do Financiamento")
 
-# Gráfico 1: Evolução do Saldo Devedor
-chart_saldo = alt.Chart(df_grafico).mark_line(point=False, strokeWidth=3).add_selection(
-    alt.selection_interval(bind='scales')
-).encode(
-    x=alt.X('Mês:Q', title='Mês'),
-    y=alt.Y('Saldo_Devedor:Q', title='Saldo Devedor (R$)', scale=alt.Scale(zero=False)),
-    color=alt.Color('Cenário:N', scale=alt.Scale(scheme='category10')),
-    tooltip=['Mês:Q', 'Saldo_Devedor:Q', 'Cenário:N']
-).properties(
-    title='Evolução do Saldo Devedor',
-    width=700,
-    height=400
-)
+# Configurações de estilo para gráficos mais bonitos
+def criar_grafico_estatico(chart):
+    return chart.resolve_scale(
+        color='independent'
+    ).configure_title(
+        fontSize=16,
+        fontWeight='bold',
+        color='#2c3e50'
+    ).configure_axis(
+        labelFontSize=12,
+        titleFontSize=14,
+        labelColor='#34495e',
+        titleColor='#2c3e50',
+        gridColor='#ecf0f1',
+        domainColor='#bdc3c7'
+    ).configure_legend(
+        labelFontSize=12,
+        titleFontSize=14,
+        labelColor='#34495e',
+        titleColor='#2c3e50'
+    ).configure_view(
+        strokeWidth=0
+    )
 
-st.altair_chart(chart_saldo, use_container_width=True)
+# Gráfico 1: Evolução do Saldo Devedor
+chart_saldo = alt.Chart(df_grafico).mark_line(
+    strokeWidth=4,
+    point=alt.OverlayMarkDef(
+        filled=True,
+        size=60,
+        opacity=0.8
+    )
+).encode(
+    x=alt.X('Mês:Q', 
+            title='Mês',
+            scale=alt.Scale(nice=True)),
+    y=alt.Y('Saldo_Devedor:Q', 
+            title='Saldo Devedor (R$)',
+            scale=alt.Scale(zero=False, nice=True),
+            axis=alt.Axis(format=',.0f')),
+    color=alt.Color('Cenário:N', 
+                   scale=alt.Scale(range=['#e74c3c', '#27ae60']),
+                   legend=alt.Legend(title="Cenário")),
+    tooltip=['Mês:Q', 
+            alt.Tooltip('Saldo_Devedor:Q', format=',.0f', title='Saldo Devedor'),
+            'Cenário:N']
+).properties(
+    title='📊 Evolução do Saldo Devedor',
+    width=800,
+    height=400
+).interactive(bind_x=False, bind_y=False)
+
+st.altair_chart(criar_grafico_estatico(chart_saldo), use_container_width=True)
 
 # Gráfico 2: Evolução dos Juros
-chart_juros = alt.Chart(df_grafico).mark_line(point=False, strokeWidth=3).add_selection(
-    alt.selection_interval(bind='scales')
+chart_juros = alt.Chart(df_grafico).mark_area(
+    line={'strokeWidth': 3},
+    opacity=0.7
 ).encode(
-    x=alt.X('Mês:Q', title='Mês'),
-    y=alt.Y('Juros:Q', title='Juros Mensais (R$)'),
-    color=alt.Color('Cenário:N', scale=alt.Scale(scheme='set2')),
-    tooltip=['Mês:Q', 'Juros:Q', 'Cenário:N']
+    x=alt.X('Mês:Q', 
+            title='Mês',
+            scale=alt.Scale(nice=True)),
+    y=alt.Y('Juros:Q', 
+            title='Juros Mensais (R$)',
+            scale=alt.Scale(nice=True),
+            axis=alt.Axis(format=',.0f')),
+    color=alt.Color('Cenário:N',
+                   scale=alt.Scale(range=['#f39c12', '#9b59b6']),
+                   legend=alt.Legend(title="Cenário")),
+    tooltip=['Mês:Q',
+            alt.Tooltip('Juros:Q', format=',.2f', title='Juros'),
+            'Cenário:N']
 ).properties(
-    title='Evolução dos Juros Mensais',
-    width=700,
+    title='💰 Evolução dos Juros Mensais',
+    width=800,
     height=400
-)
+).interactive(bind_x=False, bind_y=False)
 
-st.altair_chart(chart_juros, use_container_width=True)
+st.altair_chart(criar_grafico_estatico(chart_juros), use_container_width=True)
 
 # Gráfico 3: Evolução da Amortização
-chart_amortizacao = alt.Chart(df_grafico).mark_line(point=False, strokeWidth=3).add_selection(
-    alt.selection_interval(bind='scales')
+chart_amortizacao = alt.Chart(df_grafico).mark_bar(
+    opacity=0.8,
+    strokeWidth=1,
+    stroke='white'
 ).encode(
-    x=alt.X('Mês:Q', title='Mês'),
-    y=alt.Y('Amortização:Q', title='Amortização (R$)'),
-    color=alt.Color('Cenário:N', scale=alt.Scale(scheme='dark2')),
-    tooltip=['Mês:Q', 'Amortização:Q', 'Cenário:N']
+    x=alt.X('Mês:Q', 
+            title='Mês',
+            scale=alt.Scale(nice=True)),
+    y=alt.Y('Amortização:Q', 
+            title='Amortização (R$)',
+            scale=alt.Scale(nice=True),
+            axis=alt.Axis(format=',.0f')),
+    color=alt.Color('Cenário:N',
+                   scale=alt.Scale(range=['#3498db', '#e67e22']),
+                   legend=alt.Legend(title="Cenário")),
+    tooltip=['Mês:Q',
+            alt.Tooltip('Amortização:Q', format=',.2f', title='Amortização'),
+            'Cenário:N']
 ).properties(
-    title='Evolução da Amortização Mensal',
-    width=700,
+    title='🎯 Evolução da Amortização Mensal',
+    width=800,
     height=400
-)
+).interactive(bind_x=False, bind_y=False)
 
-st.altair_chart(chart_amortizacao, use_container_width=True)
+st.altair_chart(criar_grafico_estatico(chart_amortizacao), use_container_width=True)
 
-# Gráfico 4: Composição da parcela (área empilhada)
-df_composicao = pd.DataFrame({
-    'Mês': list(range(1, min(120, len(df_normal)) + 1)) * 2,  # Primeiros 10 anos
-    'Valor': list(df_normal['Juros'][:min(120, len(df_normal))]) + list(df_normal['Amortizacao'][:min(120, len(df_normal))]),
-    'Componente': ['Juros'] * min(120, len(df_normal)) + ['Amortização'] * min(120, len(df_normal))
-})
-
-chart_composicao = alt.Chart(df_composicao).mark_area().encode(
-    x=alt.X('Mês:Q', title='Mês'),
-    y=alt.Y('Valor:Q', title='Valor (R$)'),
-    color=alt.Color('Componente:N', scale=alt.Scale(range=['#ff6b6b', '#4ecdc4'])),
-    tooltip=['Mês:Q', 'Valor:Q', 'Componente:N']
+# Gráfico 4: Composição da parcela (área empilhada) - MAIS BONITO
+chart_composicao = alt.Chart(df_composicao).mark_area(
+    line={'strokeWidth': 2},
+    opacity=0.8
+).encode(
+    x=alt.X('Mês:Q', 
+            title='Mês',
+            scale=alt.Scale(nice=True)),
+    y=alt.Y('Valor:Q', 
+            title='Valor (R$)',
+            scale=alt.Scale(nice=True),
+            axis=alt.Axis(format=',.0f')),
+    color=alt.Color('Componente:N',
+                   scale=alt.Scale(range=['#e74c3c', '#2ecc71']),
+                   legend=alt.Legend(title="Componente da Parcela")),
+    tooltip=['Mês:Q',
+            alt.Tooltip('Valor:Q', format=',.2f', title='Valor'),
+            'Componente:N']
 ).properties(
-    title='Composição da Parcela - Juros vs. Amortização (Primeiros 10 anos)',
-    width=700,
+    title='📈 Composição da Parcela - Juros vs. Amortização (Primeiros 10 anos)',
+    width=800,
     height=400
-)
+).interactive(bind_x=False, bind_y=False)
 
-st.altair_chart(chart_composicao, use_container_width=True)
+st.altair_chart(criar_grafico_estatico(chart_composicao), use_container_width=True)
 
 # Resumo final
 st.markdown("---")
