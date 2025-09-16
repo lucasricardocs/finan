@@ -9,15 +9,14 @@ st.set_page_config(page_title="Simulador de Financiamento Caixa", layout="wide")
 st.title('🏦 Simulador de Financiamento (Baseado em Simulação Real da Caixa)')
 st.markdown("Calcule e planeje a quitação do seu financiamento com dados e custos reais do mercado.")
 
-# --- NOVOS DADOS BASEADOS NA IMAGEM ---
+# --- DADOS BASEADOS NA IMAGEM ---
 TAXAS_BASE_ATUALIZADAS = {
-    'Poupança CAIXA + TR': 0.0993, # Taxa nominal de 9.93% a.a. da imagem
+    'Poupança CAIXA + TR': 0.0993,
     'IPCA + Taxa Fixa': 0.0485,
     'Taxa Fixa': 0.1250,
 }
 TAXA_SERVIDOR_REDUCAO = 0.005
 
-# Pacotes de seguro e suas taxas CESH (Custo Efetivo do Seguro Habitacional) anuais
 PACOTES_SEGURO_CESH = {
     "Caixa Residencial": 0.0297,
     "Tokio Marine Seguradora": 0.0290,
@@ -26,9 +25,7 @@ PACOTES_SEGURO_CESH = {
     "Nenhum (Não recomendado)": 0.0
 }
 
-
-# --- FUNÇÕES DE CÁLCULO (Ajustada para usar o CESH) ---
-
+# --- FUNÇÕES DE CÁLCULO (sem alteração) ---
 def get_taxas_mensais(taxa_anual, projecoes):
     taxas = {}
     for key, val in projecoes.items():
@@ -39,57 +36,43 @@ def get_taxas_mensais(taxa_anual, projecoes):
 def calcular_financiamento_sac(params):
     saldo_devedor = params['valor_financiado']
     taxas = get_taxas_mensais(params['taxa_juros_aa'], params['projecoes'])
-    
     amortizacao_base = params['valor_financiado'] / params['prazo_meses']
-    
-    # Calcula o custo mensal do seguro com base na taxa CESH e no valor financiado
     custo_seguro_mensal = (params['valor_financiado'] * params['taxa_cesh_anual']) / 12
-
     dados, mes = [], 0
     while saldo_devedor > 1:
         mes += 1
         if mes > params['prazo_meses'] * 2: break
-
         if mes <= 24: periodo = 'curto'
         elif mes <= 60: periodo = 'medio'
         else: periodo = 'longo'
-
         correcao_monetaria = 0
         if params['modalidade'] == 'Poupança CAIXA + TR':
             correcao_monetaria = saldo_devedor * taxas[f'tr_{periodo}_mensal']
         elif params['modalidade'] == 'IPCA + Taxa Fixa':
             correcao_monetaria = saldo_devedor * taxas[f'ipca_{periodo}_mensal']
-        
         saldo_devedor += correcao_monetaria
         juros_mes = saldo_devedor * taxas['juros_mensal']
-        
         prestacao_base = amortizacao_base + juros_mes
         desembolso_mensal = prestacao_base + custo_seguro_mensal
-        
         saldo_devedor -= (amortizacao_base + params['amortizacao_extra_mensal'])
-
         if saldo_devedor < 0:
             desembolso_mensal += saldo_devedor
             saldo_devedor = 0
-
         dados.append({
             'Mês': mes, 'Prestação': prestacao_base, 'Juros': juros_mes,
             'Amortização': amortizacao_base, 'Seguros/Taxas': custo_seguro_mensal,
             'Desembolso Total': desembolso_mensal, 'Saldo Devedor': saldo_devedor
         })
-
     return pd.DataFrame(dados)
 
 # --- FUNÇÕES DE GRÁFICOS (sem alteração) ---
 def criar_grafico_comparativo(df_com_amort, df_sem_amort, valor_financiado):
     df_com_amort['Cenário'] = 'Com Amortização Extra'
     df_sem_amort['Cenário'] = 'Plano Original'
-    
     df_plot = pd.concat([
         df_com_amort[['Mês', 'Saldo Devedor', 'Cenário']],
         df_sem_amort[['Mês', 'Saldo Devedor', 'Cenário']]
     ])
-    
     chart = alt.Chart(df_plot).mark_line().encode(
         x=alt.X('Mês', title='Tempo (meses)'),
         y=alt.Y('Saldo Devedor', title='Saldo Devedor (R$)'),
@@ -99,8 +82,9 @@ def criar_grafico_comparativo(df_com_amort, df_sem_amort, valor_financiado):
     ).properties(title='Comparativo de Quitação: Plano Original vs. Acelerado', height=400)
     return chart
 
-# --- INTERFACE DO USUÁRIO (com inputs atualizados) ---
-main_tabs = st.tabs(["🎯 Calculadora de Prazo", " ক্যালকুলেটর Calculadora de Meta"])
+# --- INTERFACE DO USUÁRIO ---
+# --- LINHA CORRIGIDA ---
+main_tabs = st.tabs(["🎯 Calculadora de Prazo", "📅 Calculadora de Meta"])
 
 with main_tabs[0]:
     st.header("Se eu amortizar R$ X por mês, em quanto tempo quito?")
@@ -115,16 +99,17 @@ with main_tabs[1]:
 st.subheader("1. Dados do Financiamento")
 col1, col2, col3 = st.columns(3)
 with col1:
-    valor_imovel = st.number_input('Valor do imóvel (R$)', 100000.0, 5000000.0, 500000.0, 10000.0)
+    valor_imovel_milhares = st.number_input('Valor do imóvel (em milhares de R$)', min_value=100, max_value=5000, value=500, step=10, help="Digite 500 para R$ 500.000")
+    valor_imovel = valor_imovel_milhares * 1000
     modalidade = st.selectbox('Modalidade de Financiamento', list(TAXAS_BASE_ATUALIZADAS.keys()))
 with col2:
-    valor_entrada = st.number_input('Valor da entrada (R$)', 0.0, 4000000.0, 150000.0, 5000.0)
+    valor_entrada_milhares = st.number_input('Valor da entrada (em milhares de R$)', min_value=0, max_value=4000, value=150, step=5, help="Digite 150 para R$ 150.000")
+    valor_entrada = valor_entrada_milhares * 1000
     pacote_seguro = st.selectbox("Pacote de Seguro (CESH)", list(PACOTES_SEGURO_CESH.keys()))
 with col3:
-    prazo_anos = st.slider('Prazo original do contrato (anos)', 5, 35, 35) # 420 meses = 35 anos
+    prazo_anos = st.slider('Prazo original do contrato (anos)', 5, 35, 35)
     is_servidor = st.checkbox('Sou funcionário público', help="Aplica uma pequena redução na taxa de juros.")
 
-# ... (Restante da interface e lógica de cálculo permanecem os mesmos) ...
 with st.expander("Clique para configurar projeções de indexadores (Avançado)"):
     st.write("Configure a projeção média dos indexadores para diferentes períodos do financiamento.")
     p_col1, p_col2, p_col3 = st.columns(3)
@@ -143,33 +128,36 @@ with st.expander("Clique para configurar projeções de indexadores (Avançado)"
         projecoes['tr_longo'] = st.slider('TR (% a.a.)', 0.0, 5.0, 1.0, 0.1, key='tr_l')
 
 if st.button('Executar Simulação Estratégica', type="primary"):
-    valor_financiado = valor_imovel - valor_entrada
-    taxa_juros_aa = TAXAS_BASE_ATUALIZADAS[modalidade] - (TAXA_SERVIDOR_REDUCAO if is_servidor else 0)
-    taxa_cesh_anual = PACOTES_SEGURO_CESH[pacote_seguro]
-    
-    base_params = {
-        'valor_financiado': valor_financiado, 'prazo_meses': prazo_anos * 12,
-        'taxa_juros_aa': taxa_juros_aa, 'modalidade': modalidade,
-        'taxa_cesh_anual': taxa_cesh_anual, 'projecoes': projecoes
-    }
+    if valor_entrada >= valor_imovel:
+        st.error("O valor da entrada não pode ser maior ou igual ao valor do imóvel.")
+    else:
+        valor_financiado = valor_imovel - valor_entrada
+        taxa_juros_aa = TAXAS_BASE_ATUALIZADAS[modalidade] - (TAXA_SERVIDOR_REDUCAO if is_servidor else 0)
+        taxa_cesh_anual = PACOTES_SEGURO_CESH[pacote_seguro]
+        
+        base_params = {
+            'valor_financiado': valor_financiado, 'prazo_meses': prazo_anos * 12,
+            'taxa_juros_aa': taxa_juros_aa, 'modalidade': modalidade,
+            'taxa_cesh_anual': taxa_cesh_anual, 'projecoes': projecoes
+        }
 
-    if meta_prazo_anos:
-        low, high = 0, valor_financiado / meta_prazo_anos
-        for _ in range(20):
-            mid = (low + high) / 2
-            df_teste = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': mid})
-            if len(df_teste) > meta_prazo_anos * 12: low = mid
-            else: high = mid
-        amortizacao_extra_mensal_prazo = high
-        st.session_state.amortizacao_calculada = high
+        if meta_prazo_anos:
+            low, high = 0, valor_financiado / meta_prazo_anos
+            for _ in range(20):
+                mid = (low + high) / 2
+                df_teste = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': mid})
+                if len(df_teste) > meta_prazo_anos * 12: low = mid
+                else: high = mid
+            amortizacao_extra_mensal_prazo = high
+            st.session_state.amortizacao_calculada = high
 
-    df_sem_amort = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': 0})
-    df_com_amort = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': amortizacao_extra_mensal_prazo})
-    
-    st.session_state.simulacao_resultados = {
-        'df_com': df_com_amort, 'df_sem': df_sem_amort,
-        'params': base_params, 'amort_extra': amortizacao_extra_mensal_prazo
-    }
+        df_sem_amort = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': 0})
+        df_com_amort = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': amortizacao_extra_mensal_prazo})
+        
+        st.session_state.simulacao_resultados = {
+            'df_com': df_com_amort, 'df_sem': df_sem_amort,
+            'params': base_params, 'amort_extra': amortizacao_extra_mensal_prazo
+        }
 
 # --- EXIBIÇÃO DOS RESULTADOS ---
 if 'simulacao_resultados' in st.session_state:
@@ -195,7 +183,7 @@ if 'simulacao_resultados' in st.session_state:
     if meta_prazo_anos:
         st.success(f"**Estratégia Definida:** Para quitar seu financiamento em **{meta_prazo_anos} anos**, você precisará fazer amortizações mensais de **R$ {res['amort_extra']:,.2f}**. Isso resultará em uma economia total de **R$ {economia_dinheiro:,.2f}**!")
     elif res['amort_extra'] > 0:
-        st.success(f"**Ótima Estratégia!** Amortizando **R$ {res['amort_extra']:,.2f}** por mês, você quitará seu imóvel em **~{novo_prazo_meses/12:.1f} anos** em vez de {params['prazo_meses']/12}, economizando **R$ {economia_dinheiro:,.2f}** e antecipando sua liberdade financeira em **~{economia_tempo_meses/12:.1f} anos**!")
+        st.success(f"**Ótima Estratégia!** Amortizando **R$ {res['amort_extra']:,.2f}** por mês, você quitará seu imóvel em **~{novo_prazo_meses/12:.1f} anos** em vez de {params['prazo_meses']/12:.0f}, economizando **R$ {economia_dinheiro:,.2f}** e antecipando sua liberdade financeira em **~{economia_tempo_meses/12:.1f} anos**!")
 
     with st.expander("Ver plano de pagamento detalhado da sua nova estratégia"):
         st.dataframe(df_com.style.format({
