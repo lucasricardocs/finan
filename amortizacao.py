@@ -2,192 +2,331 @@ import streamlit as st
 import pandas as pd
 import altair as alt
 import numpy as np
+from datetime import datetime, timedelta
+import math
 
-# --- CONFIGURAÇÕES DA PÁGINA ---
-st.set_page_config(page_title="Simulador de Financiamento Caixa", layout="wide")
+# Configuração da página
+st.set_page_config(
+    page_title="Simulador Financiamento Habitacional CAIXA",
+    page_icon="🏠",
+    layout="wide"
+)
 
-st.title('🏦 Simulador de Financiamento (Baseado em Simulação Real da Caixa)')
-st.markdown("Calcule e planeje a quitação do seu financiamento com dados e custos reais do mercado.")
+# Título principal
+st.title("🏠 Simulador de Financiamento Habitacional CAIXA")
+st.markdown("### Sistema SAC/TR - Análise Completa e Simulação de Amortizações")
 
-# --- DADOS BASEADOS NA IMAGEM ---
-TAXAS_BASE_ATUALIZADAS = {
-    'Poupança CAIXA + TR': 0.0993,
-    'IPCA + Taxa Fixa': 0.0485,
-    'Taxa Fixa': 0.1250,
-}
-TAXA_SERVIDOR_REDUCAO = 0.005
+# Layout principal - Inputs no topo
+st.subheader("📊 Parâmetros do Financiamento")
 
-PACOTES_SEGURO_CESH = {
-    "Caixa Residencial": 0.0297,
-    "Tokio Marine Seguradora": 0.0290,
-    "Caixa Residencial Especial": 0.0407,
-    "Caixa Residencial Especial Ampliado": 0.0571,
-    "Nenhum (Não recomendado)": 0.0
-}
+col1, col2, col3, col4 = st.columns(4)
 
-# --- FUNÇÕES DE CÁLCULO (sem alteração) ---
-def get_taxas_mensais(taxa_anual, projecoes):
-    taxas = {}
-    for key, val in projecoes.items():
-        taxas[f'{key}_mensal'] = (1 + val / 100)**(1/12) - 1
-    taxas['juros_mensal'] = (1 + taxa_anual)**(1/12) - 1
-    return taxas
+with col1:
+    valor_imovel_mil = st.number_input(
+        "💰 Valor do Imóvel (em milhares R$)",
+        min_value=50,
+        max_value=5000,
+        value=500,
+        step=10,
+        help="Digite o valor em milhares. Ex: 500 = R$ 500.000"
+    )
 
-def calcular_financiamento_sac(params):
-    saldo_devedor = params['valor_financiado']
-    taxas = get_taxas_mensais(params['taxa_juros_aa'], params['projecoes'])
-    amortizacao_base = params['valor_financiado'] / params['prazo_meses']
-    custo_seguro_mensal = (params['valor_financiado'] * params['taxa_cesh_anual']) / 12
-    dados, mes = [], 0
-    while saldo_devedor > 1:
-        mes += 1
-        if mes > params['prazo_meses'] * 2: break
-        if mes <= 24: periodo = 'curto'
-        elif mes <= 60: periodo = 'medio'
-        else: periodo = 'longo'
-        correcao_monetaria = 0
-        if params['modalidade'] == 'Poupança CAIXA + TR':
-            correcao_monetaria = saldo_devedor * taxas[f'tr_{periodo}_mensal']
-        elif params['modalidade'] == 'IPCA + Taxa Fixa':
-            correcao_monetaria = saldo_devedor * taxas[f'ipca_{periodo}_mensal']
-        saldo_devedor += correcao_monetaria
-        juros_mes = saldo_devedor * taxas['juros_mensal']
-        prestacao_base = amortizacao_base + juros_mes
-        desembolso_mensal = prestacao_base + custo_seguro_mensal
-        saldo_devedor -= (amortizacao_base + params['amortizacao_extra_mensal'])
-        if saldo_devedor < 0:
-            desembolso_mensal += saldo_devedor
-            saldo_devedor = 0
+with col2:
+    valor_entrada_mil = st.number_input(
+        "🏦 Valor da Entrada (em milhares R$)",
+        min_value=0,
+        max_value=int(valor_imovel_mil * 0.8),
+        value=150,
+        step=5,
+        help="Digite o valor em milhares. Ex: 150 = R$ 150.000"
+    )
+
+with col3:
+    tempo_anos = st.number_input(
+        "⏱️ Tempo de Financiamento (anos)",
+        min_value=5,
+        max_value=35,
+        value=35,
+        step=1
+    )
+
+with col4:
+    taxa_juros = st.number_input(
+        "📈 Taxa de Juros (% a.a.)",
+        min_value=3.0,
+        max_value=15.0,
+        value=9.9258,
+        step=0.01,
+        format="%.4f"
+    )
+
+# Segunda linha de inputs
+col5, col6, col7, col8 = st.columns(4)
+
+with col5:
+    amortizacao_mensal_mil = st.number_input(
+        "💵 Amortização Mensal Extra (em milhares R$)",
+        min_value=0.0,
+        max_value=50.0,
+        value=0.0,
+        step=0.5,
+        help="Valor fixo mensal para amortização. Ex: 1 = R$ 1.000"
+    )
+
+# Converter valores de milhares para reais
+valor_imovel = valor_imovel_mil * 1000
+valor_entrada = valor_entrada_mil * 1000
+amortizacao_mensal = amortizacao_mensal_mil * 1000
+
+# Cálculos básicos
+valor_financiado = valor_imovel - valor_entrada
+tempo_meses = int(tempo_anos * 12)
+taxa_mensal = (taxa_juros / 100) / 12
+perc_entrada = (valor_entrada / valor_imovel) * 100
+
+# Validações
+if valor_entrada > valor_imovel * 0.8:
+    st.error("❌ Entrada não pode ser superior a 80% do valor do imóvel")
+    st.stop()
+
+if valor_financiado <= 0:
+    st.error("❌ Valor da entrada é igual ou superior ao valor do imóvel")
+    st.stop()
+
+# Resumo dos valores
+st.markdown("---")
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric("Valor do Imóvel", f"R$ {valor_imovel:,.2f}")
+
+with col2:
+    st.metric("Valor da Entrada", f"R$ {valor_entrada:,.2f}", f"{perc_entrada:.1f}%")
+
+with col3:
+    st.metric("Valor Financiado", f"R$ {valor_financiado:,.2f}")
+
+with col4:
+    st.metric("Prazo Total", f"{tempo_anos} anos ({tempo_meses} meses)")
+
+# Função para calcular SAC
+def calcular_sac(valor_financiado, tempo_meses, taxa_mensal, amortizacao_extra=0):
+    amortizacao_principal = valor_financiado / tempo_meses
+    
+    dados = []
+    saldo_devedor = valor_financiado
+    data_atual = datetime(2025, 10, 16)  # Data inicial
+    
+    for mes in range(1, tempo_meses + 1):
+        # Juros do mês
+        juros = saldo_devedor * taxa_mensal
+        
+        # Prestação = amortização + juros
+        prestacao = amortizacao_principal + juros
+        
+        # Seguro proporcional (aproximadamente 0.044% do saldo devedor)
+        seguro = saldo_devedor * 0.00044
+        
+        # Taxa de administração fixa
+        taxa_admin = 25.00
+        
+        # Total da parcela
+        total_parcela = prestacao + seguro + taxa_admin
+        
+        # Adicionar amortização extra
+        amortizacao_total = amortizacao_principal + amortizacao_extra
+        
+        # Data do vencimento
+        data_vencimento = data_atual + timedelta(days=30*(mes-1))
+        
         dados.append({
-            'Mês': mes, 'Prestação': prestacao_base, 'Juros': juros_mes,
-            'Amortização': amortizacao_base, 'Seguros/Taxas': custo_seguro_mensal,
-            'Desembolso Total': desembolso_mensal, 'Saldo Devedor': saldo_devedor
+            'Mes': mes,
+            'Data': data_vencimento,
+            'Prestacao': prestacao,
+            'Amortizacao': amortizacao_principal,
+            'Juros': juros,
+            'Seguro': seguro,
+            'Taxa_Admin': taxa_admin,
+            'Total_Parcela': total_parcela,
+            'Amortizacao_Extra': amortizacao_extra,
+            'Amortizacao_Total': amortizacao_total,
+            'Saldo_Devedor_Inicial': saldo_devedor,
+            'Saldo_Devedor_Final': max(0, saldo_devedor - amortizacao_total)
         })
+        
+        # Atualizar saldo devedor
+        saldo_devedor = max(0, saldo_devedor - amortizacao_total)
+        
+        # Se saldo devedor zerou, parar
+        if saldo_devedor <= 0:
+            break
+    
     return pd.DataFrame(dados)
 
-# --- FUNÇÕES DE GRÁFICOS (sem alteração) ---
-def criar_grafico_comparativo(df_com_amort, df_sem_amort, valor_financiado):
-    df_com_amort['Cenário'] = 'Com Amortização Extra'
-    df_sem_amort['Cenário'] = 'Plano Original'
-    df_plot = pd.concat([
-        df_com_amort[['Mês', 'Saldo Devedor', 'Cenário']],
-        df_sem_amort[['Mês', 'Saldo Devedor', 'Cenário']]
-    ])
-    chart = alt.Chart(df_plot).mark_line().encode(
-        x=alt.X('Mês', title='Tempo (meses)'),
-        y=alt.Y('Saldo Devedor', title='Saldo Devedor (R$)'),
-        color=alt.Color('Cenário', title='Cenário', scale=alt.Scale(domain=['Com Amortização Extra', 'Plano Original'], range=['#1f77b4', '#aec7e8'])),
-        strokeDash=alt.StrokeDash('Cenário', scale=alt.Scale(domain=['Com Amortização Extra', 'Plano Original'], range=[[1,0], [5,5]])),
-        tooltip=['Mês', 'Cenário', alt.Tooltip('Saldo Devedor', format='$,.2f')]
-    ).properties(title='Comparativo de Quitação: Plano Original vs. Acelerado', height=400)
-    return chart
+# Calcular cenários
+df_normal = calcular_sac(valor_financiado, tempo_meses, taxa_mensal, 0)
+df_com_amortizacao = calcular_sac(valor_financiado, tempo_meses, taxa_mensal, amortizacao_mensal)
 
-# --- INTERFACE DO USUÁRIO ---
-# --- LINHA CORRIGIDA ---
-main_tabs = st.tabs(["🎯 Calculadora de Prazo", "📅 Calculadora de Meta"])
+# Mostrar tabela SAC
+st.markdown("---")
+st.subheader("📋 Tabela SAC - Primeiros 24 Meses")
 
-with main_tabs[0]:
-    st.header("Se eu amortizar R$ X por mês, em quanto tempo quito?")
-    amortizacao_extra_mensal_prazo = st.number_input('Valor da amortização extra MENSAL (R$)', 0.0, 10000.0, 500.0, 50.0, key="amort_prazo")
-    meta_prazo_anos = None
+# Preparar tabela para exibição (como no formato original)
+df_exibicao = df_normal.head(24).copy()
 
-with main_tabs[1]:
-    st.header("Para quitar em Y anos, quanto preciso amortizar por mês?")
-    meta_prazo_anos = st.slider('Meta de prazo para quitação (anos)', 1, 35, 15, key="meta_slider")
-    amortizacao_extra_mensal_prazo = 0
+# Criar tabela no formato solicitado
+tabela_sac = pd.DataFrame({
+    'Nº': df_exibicao['Mes'],
+    'Vencimento': df_exibicao['Data'].dt.strftime('%d/%m/%Y'),
+    'Prestação': df_exibicao['Prestacao'].apply(lambda x: f"R$ {x:,.2f}"),
+    'Seguro': df_exibicao['Seguro'].apply(lambda x: f"R$ {x:,.2f}"),
+    'Taxa de Administração (TA)': df_exibicao['Taxa_Admin'].apply(lambda x: f"R$ {x:,.2f}"),
+    'Saldo Devedor': df_exibicao['Saldo_Devedor_Final'].apply(lambda x: f"R$ {x:,.2f}")
+})
 
-st.subheader("1. Dados do Financiamento")
-col1, col2, col3 = st.columns(3)
-with col1:
-    valor_imovel_milhares = st.number_input('Valor do imóvel (em milhares de R$)', min_value=100, max_value=5000, value=500, step=10, help="Digite 500 para R$ 500.000")
-    valor_imovel = valor_imovel_milhares * 1000
-    modalidade = st.selectbox('Modalidade de Financiamento', list(TAXAS_BASE_ATUALIZADAS.keys()))
-with col2:
-    valor_entrada_milhares = st.number_input('Valor da entrada (em milhares de R$)', min_value=0, max_value=4000, value=150, step=5, help="Digite 150 para R$ 150.000")
-    valor_entrada = valor_entrada_milhares * 1000
-    pacote_seguro = st.selectbox("Pacote de Seguro (CESH)", list(PACOTES_SEGURO_CESH.keys()))
-with col3:
-    prazo_anos = st.slider('Prazo original do contrato (anos)', 5, 35, 35)
-    is_servidor = st.checkbox('Sou funcionário público', help="Aplica uma pequena redução na taxa de juros.")
+st.dataframe(tabela_sac, use_container_width=True, hide_index=True)
 
-with st.expander("Clique para configurar projeções de indexadores (Avançado)"):
-    st.write("Configure a projeção média dos indexadores para diferentes períodos do financiamento.")
-    p_col1, p_col2, p_col3 = st.columns(3)
-    projecoes = {}
-    with p_col1:
-        st.markdown("**Curto Prazo (anos 1-2)**")
-        projecoes['ipca_curto'] = st.slider('IPCA (% a.a.)', 2.0, 15.0, 4.5, 0.1, key='ipca_c')
-        projecoes['tr_curto'] = st.slider('TR (% a.a.)', 0.0, 5.0, 1.5, 0.1, key='tr_c')
-    with p_col2:
-        st.markdown("**Médio Prazo (anos 3-5)**")
-        projecoes['ipca_medio'] = st.slider('IPCA (% a.a.)', 2.0, 15.0, 4.0, 0.1, key='ipca_m')
-        projecoes['tr_medio'] = st.slider('TR (% a.a.)', 0.0, 5.0, 1.0, 0.1, key='tr_m')
-    with p_col3:
-        st.markdown("**Longo Prazo (ano 6+)**")
-        projecoes['ipca_longo'] = st.slider('IPCA (% a.a.)', 2.0, 15.0, 3.5, 0.1, key='ipca_l')
-        projecoes['tr_longo'] = st.slider('TR (% a.a.)', 0.0, 5.0, 1.0, 0.1, key='tr_l')
-
-if st.button('Executar Simulação Estratégica', type="primary"):
-    if valor_entrada >= valor_imovel:
-        st.error("O valor da entrada não pode ser maior ou igual ao valor do imóvel.")
-    else:
-        valor_financiado = valor_imovel - valor_entrada
-        taxa_juros_aa = TAXAS_BASE_ATUALIZADAS[modalidade] - (TAXA_SERVIDOR_REDUCAO if is_servidor else 0)
-        taxa_cesh_anual = PACOTES_SEGURO_CESH[pacote_seguro]
-        
-        base_params = {
-            'valor_financiado': valor_financiado, 'prazo_meses': prazo_anos * 12,
-            'taxa_juros_aa': taxa_juros_aa, 'modalidade': modalidade,
-            'taxa_cesh_anual': taxa_cesh_anual, 'projecoes': projecoes
-        }
-
-        if meta_prazo_anos:
-            low, high = 0, valor_financiado / meta_prazo_anos
-            for _ in range(20):
-                mid = (low + high) / 2
-                df_teste = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': mid})
-                if len(df_teste) > meta_prazo_anos * 12: low = mid
-                else: high = mid
-            amortizacao_extra_mensal_prazo = high
-            st.session_state.amortizacao_calculada = high
-
-        df_sem_amort = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': 0})
-        df_com_amort = calcular_financiamento_sac({**base_params, 'amortizacao_extra_mensal': amortizacao_extra_mensal_prazo})
-        
-        st.session_state.simulacao_resultados = {
-            'df_com': df_com_amort, 'df_sem': df_sem_amort,
-            'params': base_params, 'amort_extra': amortizacao_extra_mensal_prazo
-        }
-
-# --- EXIBIÇÃO DOS RESULTADOS ---
-if 'simulacao_resultados' in st.session_state:
-    res = st.session_state.simulacao_resultados
-    df_com, df_sem, params = res['df_com'], res['df_sem'], res['params']
-    
+# Análise comparativa
+if amortizacao_mensal > 0:
     st.markdown("---")
-    st.header("2. Análise de Resultados da Estratégia")
+    st.subheader("📊 Análise Comparativa: Com vs. Sem Amortização Extra")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    # Cálculos comparativos
+    total_normal = df_normal['Total_Parcela'].sum()
+    total_com_amortizacao = df_com_amortizacao['Total_Parcela'].sum() + (amortizacao_mensal * len(df_com_amortizacao))
+    economia = total_normal - total_com_amortizacao
+    prazo_normal = len(df_normal)
+    prazo_reduzido = len(df_com_amortizacao)
+    reducao_prazo = prazo_normal - prazo_reduzido
+    
+    with col1:
+        st.metric("💰 Economia Total", f"R$ {economia:,.2f}", f"-{(economia/total_normal)*100:.1f}%")
+    
+    with col2:
+        st.metric("⏰ Redução de Prazo", f"{reducao_prazo} meses", f"{reducao_prazo/12:.1f} anos")
+    
+    with col3:
+        st.metric("💵 Total Investido Extra", f"R$ {amortizacao_mensal * len(df_com_amortizacao):,.2f}")
 
-    novo_prazo_meses = len(df_com)
-    economia_tempo_meses = len(df_sem) - novo_prazo_meses
-    custo_total_sem = df_sem['Desembolso Total'].sum()
-    custo_total_com = df_com['Desembolso Total'].sum()
-    economia_dinheiro = custo_total_sem - custo_total_com
+# Preparar dados para gráficos
+if amortizacao_mensal > 0:
+    df_grafico = pd.DataFrame({
+        'Mês': list(range(1, len(df_normal) + 1)) + list(range(1, len(df_com_amortizacao) + 1)),
+        'Saldo_Devedor': list(df_normal['Saldo_Devedor_Final']) + list(df_com_amortizacao['Saldo_Devedor_Final']),
+        'Juros': list(df_normal['Juros']) + list(df_com_amortizacao['Juros']),
+        'Amortização': list(df_normal['Amortizacao']) + list(df_com_amortizacao['Amortizacao']),
+        'Cenário': ['Sem Amortização Extra'] * len(df_normal) + ['Com Amortização Extra'] * len(df_com_amortizacao)
+    })
+else:
+    df_grafico = pd.DataFrame({
+        'Mês': list(range(1, len(df_normal) + 1)),
+        'Saldo_Devedor': list(df_normal['Saldo_Devedor_Final']),
+        'Juros': list(df_normal['Juros']),
+        'Amortização': list(df_normal['Amortizacao']),
+        'Cenário': ['Cenário Atual'] * len(df_normal)
+    })
 
-    m_col1, m_col2, m_col3 = st.columns(3)
-    m_col1.metric("Novo Prazo de Quitação", f"{novo_prazo_meses} meses (~{novo_prazo_meses/12:.1f} anos)")
-    m_col2.metric("Redução de Tempo", f"{economia_tempo_meses} meses (~{economia_tempo_meses/12:.1f} anos)")
-    m_col3.metric("Economia Financeira Total", f"R$ {economia_dinheiro:,.2f}")
+# Gráficos com Altair
+st.markdown("---")
+st.subheader("📈 Evolução do Financiamento")
 
-    st.altair_chart(criar_grafico_comparativo(df_com, df_sem, params['valor_financiado']), use_container_width=True)
+# Gráfico 1: Evolução do Saldo Devedor
+chart_saldo = alt.Chart(df_grafico).mark_line(point=False, strokeWidth=3).add_selection(
+    alt.selection_interval(bind='scales')
+).encode(
+    x=alt.X('Mês:Q', title='Mês'),
+    y=alt.Y('Saldo_Devedor:Q', title='Saldo Devedor (R$)', scale=alt.Scale(zero=False)),
+    color=alt.Color('Cenário:N', scale=alt.Scale(scheme='category10')),
+    tooltip=['Mês:Q', 'Saldo_Devedor:Q', 'Cenário:N']
+).properties(
+    title='Evolução do Saldo Devedor',
+    width=700,
+    height=400
+)
 
-    if meta_prazo_anos:
-        st.success(f"**Estratégia Definida:** Para quitar seu financiamento em **{meta_prazo_anos} anos**, você precisará fazer amortizações mensais de **R$ {res['amort_extra']:,.2f}**. Isso resultará em uma economia total de **R$ {economia_dinheiro:,.2f}**!")
-    elif res['amort_extra'] > 0:
-        st.success(f"**Ótima Estratégia!** Amortizando **R$ {res['amort_extra']:,.2f}** por mês, você quitará seu imóvel em **~{novo_prazo_meses/12:.1f} anos** em vez de {params['prazo_meses']/12:.0f}, economizando **R$ {economia_dinheiro:,.2f}** e antecipando sua liberdade financeira em **~{economia_tempo_meses/12:.1f} anos**!")
+st.altair_chart(chart_saldo, use_container_width=True)
 
-    with st.expander("Ver plano de pagamento detalhado da sua nova estratégia"):
-        st.dataframe(df_com.style.format({
-            'Prestação': "R$ {:,.2f}", 'Juros': "R$ {:,.2f}",
-            'Amortização': "R$ {:,.2f}", 'Seguros/Taxas': "R$ {:,.2f}",
-            'Desembolso Total': "R$ {:,.2f}", 'Saldo Devedor': "R$ {:,.2f}"
-        }), use_container_width=True)
+# Gráfico 2: Evolução dos Juros
+chart_juros = alt.Chart(df_grafico).mark_line(point=False, strokeWidth=3).add_selection(
+    alt.selection_interval(bind='scales')
+).encode(
+    x=alt.X('Mês:Q', title='Mês'),
+    y=alt.Y('Juros:Q', title='Juros Mensais (R$)'),
+    color=alt.Color('Cenário:N', scale=alt.Scale(scheme='set2')),
+    tooltip=['Mês:Q', 'Juros:Q', 'Cenário:N']
+).properties(
+    title='Evolução dos Juros Mensais',
+    width=700,
+    height=400
+)
+
+st.altair_chart(chart_juros, use_container_width=True)
+
+# Gráfico 3: Evolução da Amortização
+chart_amortizacao = alt.Chart(df_grafico).mark_line(point=False, strokeWidth=3).add_selection(
+    alt.selection_interval(bind='scales')
+).encode(
+    x=alt.X('Mês:Q', title='Mês'),
+    y=alt.Y('Amortização:Q', title='Amortização (R$)'),
+    color=alt.Color('Cenário:N', scale=alt.Scale(scheme='dark2')),
+    tooltip=['Mês:Q', 'Amortização:Q', 'Cenário:N']
+).properties(
+    title='Evolução da Amortização Mensal',
+    width=700,
+    height=400
+)
+
+st.altair_chart(chart_amortizacao, use_container_width=True)
+
+# Gráfico 4: Composição da parcela (área empilhada)
+df_composicao = pd.DataFrame({
+    'Mês': list(range(1, min(120, len(df_normal)) + 1)) * 2,  # Primeiros 10 anos
+    'Valor': list(df_normal['Juros'][:min(120, len(df_normal))]) + list(df_normal['Amortizacao'][:min(120, len(df_normal))]),
+    'Componente': ['Juros'] * min(120, len(df_normal)) + ['Amortização'] * min(120, len(df_normal))
+})
+
+chart_composicao = alt.Chart(df_composicao).mark_area().encode(
+    x=alt.X('Mês:Q', title='Mês'),
+    y=alt.Y('Valor:Q', title='Valor (R$)'),
+    color=alt.Color('Componente:N', scale=alt.Scale(range=['#ff6b6b', '#4ecdc4'])),
+    tooltip=['Mês:Q', 'Valor:Q', 'Componente:N']
+).properties(
+    title='Composição da Parcela - Juros vs. Amortização (Primeiros 10 anos)',
+    width=700,
+    height=400
+)
+
+st.altair_chart(chart_composicao, use_container_width=True)
+
+# Resumo final
+st.markdown("---")
+st.subheader("📊 Resumo Final")
+
+col1, col2, col3, col4 = st.columns(4)
+
+with col1:
+    st.metric("💰 Total de Juros", f"R$ {df_normal['Juros'].sum():,.2f}")
+
+with col2:
+    st.metric("🏠 Total de Seguros", f"R$ {df_normal['Seguro'].sum():,.2f}")
+
+with col3:
+    st.metric("📄 Total Taxas Admin", f"R$ {df_normal['Taxa_Admin'].sum():,.2f}")
+
+with col4:
+    st.metric("💵 Total Geral", f"R$ {df_normal['Total_Parcela'].sum():,.2f}")
+
+# Informações adicionais
+st.markdown("---")
+st.info("""
+💡 **Sistema SAC (Sistema de Amortização Constante):**
+- ✅ Amortização do principal: **constante** (R$ {:,.2f}/mês)
+- 📉 Juros mensais: **decrescentes** (diminuem a cada parcela)
+- 📊 Prestação total: **decrescente** (parcelas menores com o tempo)
+- 🎯 Amortizações extras nos primeiros anos geram **maior economia**
+""".format(valor_financiado / tempo_meses))
+
+st.markdown("---")
+st.markdown("*Simulador de Financiamento Habitacional CAIXA - Sistema SAC/TR*")
