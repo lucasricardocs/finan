@@ -1,227 +1,319 @@
+# amortizacao.py
 import streamlit as st
 import pandas as pd
 import altair as alt
-from datetime import datetime, timedelta
+from datetime import datetime
 import io
 import numpy as np
 
 # -------------------------------
-# Cores UBS Corretora
-UBS_RED = "#E60000"
-UBS_GRAY_LIGHT = "#F5F5F5"
-UBS_GRAY_DARK = "#333333"
-UBS_WHITE = "#FFFFFF"
-UBS_BLACK = "#000000"
+# Paleta (mantive tons sóbrios; ajuste se quiser cores da CAIXA/UBS)
+PRIM_COLOR = "#E60000"        # destaque (ex: UBS red)
+DARK = "#333333"
+BG = "#F5F5F5"
+WHITE = "#FFFFFF"
 
 # -------------------------------
-# Configuração da página
-st.set_page_config(page_title="Simulador de Financiamento - UBS", page_icon="🏦", layout="wide")
+st.set_page_config(page_title="Simulador SAC/TR - Referência CAIXA", page_icon="🏦", layout="wide")
 
-# CSS customizado
-st.markdown(f"""
-<style>
-.stApp {{
-    background-color: {UBS_GRAY_LIGHT};
-}}
-.stMetric {{
-    background-color: {UBS_WHITE};
-    color: {UBS_GRAY_DARK};
-    border-radius:10px;
-    padding:10px;
-}}
-</style>
-""", unsafe_allow_html=True)
+# CSS simples para visual clean
+st.markdown(
+    f"""
+    <style>
+    .stApp {{ background-color: {BG}; }}
+    .card {{ background: {WHITE}; padding: 12px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }}
+    .small-muted {{ color: #6b7280; font-size:13px; }}
+    hr{{border:0; height:1px; background:#e6e6e6; margin:18px 0;}}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # -------------------------------
-# Função SAC
-def calcular_sac(valor_financiado, taxa_juros, prazo_meses, amortizacao_extra=0):
+# Função SAC (mantém amortização fixa, aceita amortização extra mensal, para quando saldo = 0)
+def calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra_mensal=0.0):
     saldo_devedor = valor_financiado
     amortizacao_mensal = valor_financiado / prazo_meses
     dados = []
     mes = 1
 
     while saldo_devedor > 0 and mes <= prazo_meses:
-        juros = saldo_devedor * taxa_juros
+        juros = saldo_devedor * taxa_juros_mes
         amortizacao = amortizacao_mensal
-        parcela = juros + amortizacao
-
-        # Seguro aproximado 0.044% do saldo
+        # seguro aproximado (usar 0.044% como referência)
         seguro = saldo_devedor * 0.00044
         taxa_admin = 25.0
 
-        # Adiciona amortização extra
-        amortizacao_total = amortizacao + amortizacao_extra
-        parcela_total = juros + amortizacao_total + seguro + taxa_admin
+        # soma amortização extra mensal (se houver)
+        amortizacao_total = amortizacao + amortizacao_extra_mensal
+        prestacao_total = juros + amortizacao_total + seguro + taxa_admin
 
+        # abate do saldo
         saldo_devedor -= amortizacao_total
+
+        # ajuste final se extrapolar
         if saldo_devedor < 0:
-            amortizacao_total += saldo_devedor
-            parcela_total += saldo_devedor
+            # ajuste da última amortização e prestação
+            amortizacao_total += saldo_devedor  # saldo_devedor é negativo
+            prestacao_total += saldo_devedor
             saldo_devedor = 0
 
-        dados.append([mes, parcela_total, juros, amortizacao_total, saldo_devedor, seguro, taxa_admin])
+        dados.append({
+            "Mês": mes,
+            "Prestação_Total": prestacao_total,
+            "Juros": juros,
+            "Amortização": amortizacao_total,
+            "Saldo_Devedor": saldo_devedor,
+            "Seguro": seguro,
+            "Taxa_Admin": taxa_admin
+        })
         mes += 1
 
-    df = pd.DataFrame(dados, columns=["Mês", "Prestação_Total", "Juros", "Amortização", "Saldo_Devedor", "Seguro", "Taxa_Admin"])
+    df = pd.DataFrame(dados)
     return df
 
 # -------------------------------
-# Tabs
+# Defaults alinhados com as imagens de referência (CAIXA)
+# Valor imóvel: R$ 500.000, Entrada: R$ 150.000, Prazo máximo: 420 meses (35 anos),
+# Juros nominais ~9.93% a.a. (definido como input abaixo)
+DEFAULT_VALOR_IMOVEL = 500_000.0
+DEFAULT_ENTRADA = 150_000.0
+DEFAULT_PRAZO_ANOS = 35
+DEFAULT_TAXA_ANUAL = 9.93   # taxa nominal anual - disponível na imagem de referência
+
+# -------------------------------
+# Layout: Tabs
 tab1, tab2, tab3 = st.tabs(["📥 Parâmetros", "📊 Resultados", "📤 Exportar"])
 
-# --- Tab 1: Inputs ---
+# --- Tab 1: Parâmetros ---
 with tab1:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.header("Parâmetros do Financiamento")
-    
+    st.markdown("Use os valores iniciais (ajustados a partir das imagens de referência) ou altere conforme necessário.")
     col1, col2 = st.columns(2)
+
     with col1:
-        valor_imovel = st.number_input("💰 Valor do Imóvel (R$)", min_value=100000, value=500000, step=1000)
-        valor_entrada = st.number_input("🏦 Valor da Entrada (R$)", min_value=0, max_value=valor_imovel, value=100000, step=1000)
-        prazo_anos = st.slider("⏱️ Prazo (anos)", min_value=5, max_value=35, value=20)
+        valor_imovel = st.number_input("💰 Valor do imóvel (R$)", min_value=1_00_000.0, value=DEFAULT_VALOR_IMOVEL, step=1000.0, format="%.2f")
+        valor_entrada = st.number_input("🏦 Valor da entrada (R$)", min_value=0.0, max_value=valor_imovel, value=DEFAULT_ENTRADA, step=1000.0, format="%.2f")
+        prazo_anos = st.number_input("⏱️ Prazo do financiamento (anos)", min_value=5, max_value=35, value=DEFAULT_PRAZO_ANOS, step=1)
     with col2:
-        taxa_juros_ano = st.number_input("📈 Taxa de Juros Anual (%)", min_value=0.1, max_value=20.0, value=8.0)
-        amortizacao_extra = st.number_input("💵 Amortização Extra Mensal (R$)", min_value=0.0, value=1000.0)
-        estrategia = st.selectbox("🎯 Estratégia de amortização extra", ["Reduzir Parcela", "Reduzir Prazo"])
-    
-    # Conversões e validações
+        taxa_juros_ano = st.number_input("📈 Taxa de juros nominal anual (% a.a.)", min_value=0.0, value=DEFAULT_TAXA_ANUAL, step=0.01, format="%.4f")
+        st.markdown("<div class='small-muted'>Na sua referência havia Juros Nominais ≈ 9.93% a.a. e Juros Efetivos ≈ 10.39% a.a.</div>", unsafe_allow_html=True)
+        amortizacao_extra = st.number_input("💵 Amortização extra mensal (R$)", min_value=0.0, value=0.0, step=100.0, format="%.2f")
+        estrategia = st.selectbox("🎯 Estratégia (apenas informativa nesta versão)", ["Reduzir Parcela (padrão)", "Reduzir Prazo (não implementado)"])
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    # validações simples
+    if valor_entrada > valor_imovel * 0.7:
+        st.warning("A referência mostra cota máxima de financiamento de 70% — entrada maior que 30% é atípica nessa regra.")
     valor_financiado = valor_imovel - valor_entrada
-    prazo_meses = prazo_anos * 12
+    prazo_meses = int(prazo_anos * 12)
+    # converte taxa anual nominal em taxa mensal aproximada (capitalização mensal)
     taxa_juros_mes = (1 + taxa_juros_ano / 100) ** (1/12) - 1
 
 # --- Tab 2: Resultados ---
 with tab2:
-    st.header("Resumo da Simulação")
-    
-    df_normal = calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra=0)
-    df_com_amortizacao = calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra=amortizacao_extra)
-    
-    total_normal = df_normal["Prestação_Total"].sum()
-    total_com = df_com_amortizacao["Prestação_Total"].sum()
-    economia = total_normal - total_com
-    
-    # Cards métricas
-    st.markdown("### Principais Métricas")
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("💰 Total Sem Extra", f"R$ {total_normal:,.2f}")
-    col2.metric("💰 Total Com Extra", f"R$ {total_com:,.2f}", f"Economia R$ {economia:,.2f}")
-    col3.metric("⏳ Prazo Original", f"{len(df_normal)} meses")
-    col4.metric("⏳ Prazo Final", f"{len(df_com_amortizacao)} meses")
-    col5.metric("💵 Amortização Extra Mensal", f"R$ {amortizacao_extra:,.2f}")
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.header("Resumo e Gráficos")
+    st.markdown("Resultados calculados pelo Sistema SAC (Sist. de Amortização Constante). A amortização extra é aplicada mensalmente e, nesta versão, reduz saldo (matriz mantém prazo mas para quando saldo = 0).")
 
-    # Limite de meses para gráficos
+    # cálculos
+    df_normal = calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra_mensal=0.0)
+    df_com = calcular_sac(valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra_mensal=amortizacao_extra)
+
+    # métricas
+    total_normal = df_normal["Prestação_Total"].sum() if not df_normal.empty else 0.0
+    total_com = df_com["Prestação_Total"].sum() if not df_com.empty else 0.0
+    economia_total = total_normal - total_com
+
+    col1, col2, col3, col4, col5 = st.columns(5)
+    col1.metric("Valor Financiado", f"R$ {valor_financiado:,.2f}")
+    col2.metric("Total sem extra", f"R$ {total_normal:,.2f}")
+    col3.metric("Total com extra", f"R$ {total_com:,.2f}", f"Economia R$ {economia_total:,.2f}")
+    col4.metric("Prazo original (meses)", f"{len(df_normal)}")
+    col5.metric("Prazo com amortização", f"{len(df_com)}")
+
+    st.markdown("----")
+
+    # limite do eixo X: 0 até prazo + 5 anos
     mes_max = (prazo_anos + 5) * 12
 
-    # Dados para gráficos
-    df_normal["Cenário"] = "Sem Extra"
-    df_com_amortizacao["Cenário"] = "Com Extra"
-    df_grafico = pd.concat([df_normal, df_com_amortizacao], ignore_index=True)
+    # preparar df para gráficos comparativos (concat)
+    df_normal_plot = df_normal.copy()
+    df_normal_plot["Cenário"] = "Sem Extra"
+    df_com_plot = df_com.copy()
+    df_com_plot["Cenário"] = "Com Extra"
+    df_grafico = pd.concat([df_normal_plot, df_com_plot], ignore_index=True, sort=False)
 
-    # --- Corrigir cálculo da economia ---
-    # Mapear Prestação_Total do cenário sem extra pelo mês
-    prestacao_sem_extra_map = df_normal.set_index("Mês")["Prestação_Total"].to_dict()
-    df_grafico["Prestação_Sem_Extra"] = df_grafico["Mês"].map(prestacao_sem_extra_map)
+    # CORREÇÃO ECONOMIA: mapear por mês a prestação sem extra
+    prest_sem_extra_map = df_normal.set_index("Mês")["Prestação_Total"].to_dict()
+    # mapeia (se mês não existir no df_normal -> retorna np.nan)
+    df_grafico["Prestacao_Sem_Extra"] = df_grafico["Mês"].map(lambda m: prest_sem_extra_map.get(m, np.nan))
+    # calcular economia apenas onde houver valor de referência (prestacao_sem_extra não NaN) e cenário "Com Extra"
     df_grafico["Economia"] = df_grafico.apply(
-        lambda x: x["Prestação_Sem_Extra"] - x["Prestação_Total"] if x["Cenário"]=="Com Extra" else 0,
+        lambda r: (r["Prestacao_Sem_Extra"] - r["Prestação_Total"]) if (r["Cenário"] == "Com Extra" and not pd.isna(r["Prestacao_Sem_Extra"])) else 0.0,
         axis=1
     )
-    df_economia = df_grafico[df_grafico["Cenário"]=="Com Extra"].copy()
-    df_economia["Economia_Acum"] = df_economia["Economia"].cumsum()
+    # DataFrame com economia acumulada (somente cenário com extra)
+    df_economia = df_grafico[df_grafico["Cenário"] == "Com Extra"].copy()
+    if not df_economia.empty:
+        df_economia["Economia_Acum"] = df_economia["Economia"].cumsum()
+    else:
+        df_economia["Economia_Acum"] = []
 
-    # 1️⃣ Saldo Devedor
+    # --- GRÁFICOS ---
+    # 1) Saldo Devedor
     st.subheader("📈 Evolução do Saldo Devedor")
-    chart_saldo = alt.Chart(df_grafico).mark_line(strokeWidth=3).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Saldo_Devedor",
-        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
-        tooltip=["Mês","Saldo_Devedor","Cenário"]
-    ).properties(width=700, height=400)
+    chart_saldo = (
+        alt.Chart(df_grafico)
+        .mark_line(strokeWidth=3)
+        .encode(
+            x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max]), title="Mês"),
+            y=alt.Y("Saldo_Devedor", title="Saldo Devedor (R$)"),
+            color=alt.Color("Cenário", scale=alt.Scale(range=[DARK, PRIM_COLOR])),
+            tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Saldo_Devedor:Q", format=",.2f"), "Cenário"]
+        )
+        .properties(height=380)
+    )
     st.altair_chart(chart_saldo, use_container_width=True)
 
-    # 2️⃣ Composição da Parcela
-    st.subheader("📊 Composição da Parcela (Juros x Amortização)")
-    df_comp = df_com_amortizacao.melt(id_vars=["Mês"], value_vars=["Juros","Amortização"], var_name="Componente", value_name="Valor")
-    chart_comp = alt.Chart(df_comp).mark_area(opacity=0.7).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Valor",
-        color=alt.Color("Componente", scale=alt.Scale(domain=["Juros","Amortização"], range=[UBS_RED, UBS_GRAY_DARK])),
-        tooltip=["Mês","Componente","Valor"]
-    ).properties(width=700, height=400)
-    st.altair_chart(chart_comp, use_container_width=True)
+    # 2) Composição da parcela (Juros x Amortização) - usa df_com
+    st.subheader("📊 Composição da Parcela (Juros x Amortização) - cenário com extra")
+    if not df_com.empty:
+        df_comp = df_com.melt(id_vars=["Mês"], value_vars=["Juros", "Amortização"], var_name="Componente", value_name="Valor")
+        chart_comp = (
+            alt.Chart(df_comp)
+            .mark_area(opacity=0.7)
+            .encode(
+                x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max]), title="Mês"),
+                y=alt.Y("Valor", title="R$"),
+                color=alt.Color("Componente", scale=alt.Scale(domain=["Juros", "Amortização"], range=[PRIM_COLOR, DARK])),
+                tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Valor:Q", format=",.2f"), "Componente"]
+            )
+            .properties(height=380)
+        )
+        st.altair_chart(chart_comp, use_container_width=True)
+    else:
+        st.info("Simulação vazia — verifique parâmetros.")
 
-    # 3️⃣ Juros Mensais
+    # 3) Juros Mensais (comparativo)
     st.subheader("💰 Evolução dos Juros Mensais")
-    chart_juros = alt.Chart(df_grafico).mark_line(strokeWidth=2).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Juros",
-        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
-        tooltip=["Mês","Juros","Cenário"]
-    ).properties(width=700, height=350)
+    chart_juros = (
+        alt.Chart(df_grafico)
+        .mark_line()
+        .encode(
+            x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+            y=alt.Y("Juros", title="Juros (R$)"),
+            color=alt.Color("Cenário", scale=alt.Scale(range=[DARK, PRIM_COLOR])),
+            tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Juros:Q", format=",.2f"), "Cenário"]
+        )
+        .properties(height=300)
+    )
     st.altair_chart(chart_juros, use_container_width=True)
 
-    # 4️⃣ Amortização Mensal
+    # 4) Amortização Mensal (comparativo)
     st.subheader("🎯 Evolução da Amortização Mensal")
-    chart_amort = alt.Chart(df_grafico).mark_bar(opacity=0.7).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Amortização",
-        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
-        tooltip=["Mês","Amortização","Cenário"]
-    ).properties(width=700, height=350)
+    chart_amort = (
+        alt.Chart(df_grafico)
+        .mark_bar(opacity=0.8)
+        .encode(
+            x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+            y=alt.Y("Amortização", title="Amortização (R$)"),
+            color=alt.Color("Cenário", scale=alt.Scale(range=[DARK, PRIM_COLOR])),
+            tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Amortização:Q", format=",.2f"), "Cenário"]
+        )
+        .properties(height=300)
+    )
     st.altair_chart(chart_amort, use_container_width=True)
 
-    # 5️⃣ Prestação Total
-    st.subheader("💵 Evolução da Prestação Total")
-    chart_prest = alt.Chart(df_grafico).mark_line(strokeWidth=2).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Prestação_Total",
-        color=alt.Color("Cenário", scale=alt.Scale(range=[UBS_GRAY_DARK, UBS_RED])),
-        tooltip=["Mês","Prestação_Total","Cenário"]
-    ).properties(width=700, height=350)
+    # 5) Prestação Total (comparativo)
+    st.subheader("💵 Evolução da Prestação Total (inclui seguro e taxa admin)")
+    chart_prest = (
+        alt.Chart(df_grafico)
+        .mark_line()
+        .encode(
+            x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+            y=alt.Y("Prestação_Total", title="Prestação Total (R$)"),
+            color=alt.Color("Cenário", scale=alt.Scale(range=[DARK, PRIM_COLOR])),
+            tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Prestação_Total:Q", format=",.2f"), "Cenário"]
+        )
+        .properties(height=300)
+    )
     st.altair_chart(chart_prest, use_container_width=True)
 
-    # 6️⃣ Economia Acumulada
-    st.subheader("💸 Economia Acumulada com Amortização Extra")
-    chart_econ = alt.Chart(df_economia).mark_line(strokeWidth=2, color=UBS_RED).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Economia_Acum",
-        tooltip=["Mês","Economia_Acum"]
-    ).properties(width=700, height=350)
-    st.altair_chart(chart_econ, use_container_width=True)
+    # 6) Economia Acumulada (somente onde houver mapeamento)
+    st.subheader("💸 Economia Acumulada (comparando mês a mês com cenário sem extra)")
+    if not df_economia.empty:
+        chart_econ = (
+            alt.Chart(df_economia)
+            .mark_line(color=PRIM_COLOR, strokeWidth=2)
+            .encode(
+                x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+                y=alt.Y("Economia_Acum", title="Economia Acumulada (R$)"),
+                tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Economia_Acum:Q", format=",.2f")]
+            )
+            .properties(height=320)
+        )
+        st.altair_chart(chart_econ, use_container_width=True)
+    else:
+        st.info("Nenhuma economia acumulada calculável (verifique se cenário sem extra tem meses suficientes para comparar).")
 
-    # 7️⃣ Composição de Custos
-    st.subheader("📊 Composição de Custos (Juros + Amortização + Seguro + Taxa Admin)")
-    df_custo = df_com_amortizacao.melt(id_vars=["Mês"], value_vars=["Juros","Amortização","Seguro","Taxa_Admin"], var_name="Componente", value_name="Valor")
-    chart_custo = alt.Chart(df_custo).mark_area(opacity=0.7).encode(
-        x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
-        y="Valor",
-        color=alt.Color("Componente", scale=alt.Scale(range=[UBS_RED, UBS_GRAY_DARK, "#FFA500", "#008000"])),
-        tooltip=["Mês","Componente","Valor"]
-    ).properties(width=700, height=400)
-    st.altair_chart(chart_custo, use_container_width=True)
+    # 7) Composição de Custos (Juros + Amortização + Seguro + Taxa_Admin)
+    st.subheader("📊 Composição de Custos - cenário com extra")
+    if "Seguro" in df_com.columns and "Taxa_Admin" in df_com.columns:
+        df_custo = df_com.melt(id_vars=["Mês"], value_vars=["Juros", "Amortização", "Seguro", "Taxa_Admin"], var_name="Componente", value_name="Valor")
+        chart_custo = (
+            alt.Chart(df_custo)
+            .mark_area(opacity=0.7)
+            .encode(
+                x=alt.X("Mês", scale=alt.Scale(domain=[0, mes_max])),
+                y=alt.Y("Valor", title="R$"),
+                color="Componente:N",
+                tooltip=[alt.Tooltip("Mês:Q"), alt.Tooltip("Valor:Q", format=",.2f"), "Componente"]
+            )
+            .properties(height=380)
+        )
+        st.altair_chart(chart_custo, use_container_width=True)
+    else:
+        st.info("Dados de seguro/taxa não disponíveis para composição de custos.")
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # --- Tab 3: Exportar ---
 with tab3:
-    st.header("📤 Exportar Resultados")
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.header("Exportar resultados")
+    st.markdown("Baixe as tabelas completas (cenário sem amortização extra e com amortização extra).")
+
     buffer = io.BytesIO()
+    # escreve os dataframes em um arquivo Excel na memória
     with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
         df_normal.to_excel(writer, sheet_name="Sem_Amortizacao", index=False)
-        df_com_amortizacao.to_excel(writer, sheet_name="Com_Amortizacao", index=False)
-        # não precisa mais de writer.save()
+        df_com.to_excel(writer, sheet_name="Com_Amortizacao", index=False)
+    buffer.seek(0)
     st.download_button(
-        label="📥 Baixar Simulação em Excel",
+        label="📥 Baixar simulação (Excel)",
         data=buffer,
-        file_name="simulacao_financiamento_ubs.xlsx",
+        file_name="simulacao_financiamento_referencia_caixa.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------------
-# Rodapé estilizado
+# Rodapé estilizado e informativo (com ano dinâmico)
+current_year = datetime.today().year
 st.markdown(
     f"""
-    <hr style="border:1px solid {UBS_GRAY_DARK}; margin-top:40px; margin-bottom:20px;">
-    <div style="text-align:center; color:{UBS_GRAY_DARK}; font-size:14px;">
-        🏦 <b>Simulador de Financiamento UBS Corretora</b><br>
-        Desenvolvido em <span style="color:{UBS_RED};">Python</span> + 
-        <span style="color:#FF4B4B;">Streamlit</span> | © {datetime.today().year}
+    <hr>
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="color:{DARK};">
+        <strong>Simulador SAC/TR</strong> — parâmetros iniciais ajustados conforme referência da CAIXA.
+        <div style="font-size:12px; color:#6b7280;">Valores apresentados são estimativas e meramente informativos.</div>
+      </div>
+      <div style="text-align:right; color:{DARK}; font-size:13px;">
+        Desenvolvido por você • © {current_year}
+      </div>
     </div>
     """,
     unsafe_allow_html=True
