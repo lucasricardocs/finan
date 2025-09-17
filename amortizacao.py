@@ -283,7 +283,7 @@ def criar_grafico_pizza(dataframe):
     fig.update_layout(
         title="Composição do Financiamento",
         title_x=0.5,
-        height=800,
+        height=400,
         showlegend=False, 
         margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
@@ -306,7 +306,7 @@ def criar_grafico_barras(dataframe):
         title="Evolução das Parcelas por Mês",
         title_x=0.5,
         barmode='stack', 
-        height=800,
+        height=400,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -336,7 +336,7 @@ def criar_grafico_linha(dataframe):
     fig.update_layout(
         title="Evolução de Juros, Amortização e Parcela",
         title_x=0.5,
-        height=800,
+        height=400,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
