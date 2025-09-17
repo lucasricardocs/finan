@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -45,14 +44,13 @@ st.markdown("""
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
         box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
         animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite; /* Múltiplas animações */
-        text-align: center;
         display: flex;
-        flex-direction: column;
+        flex-direction: row; /* Mudado para row para posicionar logo à esquerda */
         align-items: center;
         justify-content: center;
-        gap: 1rem; /* Aumentado o gap */
+        gap: 2rem; /* Aumentado o gap entre logo e texto */
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-        min-height: 300px; /* Altura mínima para o container */
+        height: 450px; /* Altura fixa conforme solicitado */
     }
     .title-container:hover {
         transform: translateY(-8px) scale(1.02); /* Efeito de escala no hover */
@@ -61,18 +59,22 @@ st.markdown("""
     }
     
     .title-logo {
-        height: 4.5rem; /* Removido limitação de altura */
-        width: 4.5rem; /* Removido limitação de largura */
-        max-height: none; /* Removido limitação máxima de altura */
-        max-width: none; /* Removido limitação máxima de largura */
-        min-height: 200px; /* Tamanho mínimo para garantir visibilidade */
-        min-width: 200px; /* Tamanho mínimo para garantir visibilidade */
+        height: 300px; /* Altura compatível com container de 450px */
+        width: 300px; /* Largura proporcional */
         object-fit: contain;
-        margin-bottom: 1rem; /* Aumentado espaçamento entre logo e título */
+        flex-shrink: 0; /* Impede que o logo encolha */
+    }
+    
+    .title-text-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start; /* Alinha texto à esquerda dentro do container */
+        justify-content: center;
+        flex: 1; /* Ocupa o espaço restante */
     }
     
     .main-title {
-        font-size: 4.5rem; /* Aumentado ainda mais o tamanho da fonte do título */
+        font-size: 3.5rem; /* Ajustado para caber melhor no layout horizontal */
         font-weight: 700;
         color: #0d6efd;
         margin: 0;
@@ -82,7 +84,7 @@ st.markdown("""
     }
 
     .subtitle {
-        font-size: 1.8rem; /* Aumentado ainda mais o tamanho da fonte do subtítulo */
+        font-size: 1.5rem; /* Ajustado para caber melhor no layout horizontal */
         font-style: italic;
         color: #000000; /* Cor preta conforme solicitado */
         margin-top: 0.8rem;
@@ -351,8 +353,10 @@ st.markdown(
     f"""
     <div class="title-container">
         <img src="https://github.com/lucasricardocs/finan/blob/main/casa.png?raw=true" class="title-logo" alt="Logo">
-        <p class="main-title">Simulação de Financiamento e Amortização</p>
-        <p class="subtitle">Transformando sonhos em realidade financeira</p>
+        <div class="title-text-container">
+            <p class="main-title">Simulação de Financiamento e Amortização</p>
+            <p class="subtitle">Transformando sonhos em realidade financeira</p>
+        </div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -451,4 +455,3 @@ if 'simular' in st.session_state and st.session_state.simular:
             st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
         else:
             st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
-
