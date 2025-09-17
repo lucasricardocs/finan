@@ -40,7 +40,7 @@ st.markdown("""
     
     /* Container animado para o título */
     .title-container {
-        border: 1px solid #dee2e6;
+        border: 1px solid "white";
         border-radius: 12px; /* Bordas mais arredondadas */
         padding: 2rem; /* Aumentado o padding */
         margin: 2rem auto; /* Aumentado a margem */
@@ -78,7 +78,7 @@ st.markdown("""
     }
     
     .main-title {
-        font-size: 4.8rem; /* Aumentado significativamente o tamanho */
+        font-size: 10rem; /* Aumentado significativamente o tamanho */
         font-weight: 700;
         color: #0d6efd;
         margin: 0;
@@ -91,7 +91,7 @@ st.markdown("""
         font-size: 2.2rem; /* Aumentado significativamente o tamanho */
         font-style: italic;
         color: #000000; /* Cor preta conforme solicitado */
-        margin-top: 1rem;
+        margin-top: 0.5rem;
         font-weight: 400;
         font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil no texto */
