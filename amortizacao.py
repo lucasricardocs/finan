@@ -1,9 +1,9 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import base64
+import random
 
 # -------------------------------
 # CONFIGURAÇÃO GERAL
@@ -28,11 +28,50 @@ def format_currency(value):
         return "R$ 0,00"
 
 # -------------------------------
+# FRASES MOTIVADORAS PARA O RODAPÉ
+# -------------------------------
+frases_motivadoras = [
+    "O sucesso é a soma de pequenos esforços repetidos dia após dia.",
+    "Acredite em você mesmo e tudo será possível.",
+    "O futuro pertence àqueles que acreditam na beleza de seus sonhos.",
+    "Não espere por oportunidades, crie-as.",
+    "A persistência é o caminho do êxito.",
+    "Grandes conquistas requerem grandes ambições.",
+    "O único lugar onde o sucesso vem antes do trabalho é no dicionário.",
+    "Seja a mudança que você quer ver no mundo.",
+    "A jornada de mil milhas começa com um único passo.",
+    "Você é mais forte do que imagina e mais capaz do que acredita.",
+    "O fracasso é apenas uma oportunidade para começar de novo com mais inteligência.",
+    "Sonhe grande e ouse falhar.",
+    "A vida é 10% o que acontece com você e 90% como você reage a isso.",
+    "Não deixe que o medo de perder seja maior que a vontade de ganhar.",
+    "O sucesso não é final, o fracasso não é fatal: é a coragem de continuar que conta.",
+    "Acredite que você pode e você já está no meio do caminho.",
+    "A única maneira de fazer um excelente trabalho é amar o que você faz.",
+    "Seja você mesmo; todos os outros já foram tomados.",
+    "A vida começa no final da sua zona de conforto.",
+    "O que não nos mata, nos fortalece.",
+    "Transforme seus sonhos em planos e seus planos em realidade.",
+    "A disciplina é a ponte entre objetivos e conquistas.",
+    "Cada dia é uma nova oportunidade para ser melhor que ontem.",
+    "O impossível é apenas uma opinião.",
+    "Sua única limitação é você mesmo."
+]
+
+# Seleciona uma frase aleatória para o rodapé
+frase_rodape = random.choice(frases_motivadoras)
+
+# -------------------------------
 # ESTILOS MELHORADOS
 # -------------------------------
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Livvic:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,900&display=swap');
+    
+    /* Aplicando fonte Livvic globalmente */
+    * {
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+    }
     
     .stApp {
         background-color: #f8f9fa;
@@ -41,60 +80,60 @@ st.markdown("""
     /* Container animado para o título */
     .title-container {
         border: 1px solid #dee2e6;
-        border-radius: 12px; /* Bordas mais arredondadas */
-        padding: 2rem; /* Aumentado o padding */
-        margin: 2rem auto; /* Aumentado a margem */
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
-        animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite; /* Múltiplas animações */
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 2rem auto;
+        background-color: #f8f9fa; /* Mesmo fundo do background */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite;
         display: flex;
-        flex-direction: row; /* Mudado para row para posicionar logo à esquerda */
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 2rem; /* Aumentado o gap entre logo e texto */
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-        height: 450px; /* Altura fixa conforme solicitado */
+        gap: 2rem; /* Distância de 2rem entre logo e texto */
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 450px; /* Altura fixa */
     }
     .title-container:hover {
-        transform: translateY(-8px) scale(1.02); /* Efeito de escala no hover */
-        box-shadow: 0 12px 24px rgba(0,0,0,0.25); /* Sombra ainda mais pronunciada no hover */
-        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%); /* Mudança de gradiente no hover */
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+        background-color: #e9ecef;
     }
     
     .title-logo {
-        height: 300px; /* Altura compatível com container de 450px */
-        width: 300px; /* Largura proporcional */
+        height: 300px; /* Altura da casa.png */
+        width: 300px;
         object-fit: contain;
-        flex-shrink: 0; /* Impede que o logo encolha */
+        flex-shrink: 0;
     }
     
     .title-text-container {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Centraliza o texto horizontalmente */
+        align-items: center;
         justify-content: center;
-        flex: 1; /* Ocupa o espaço restante */
-        text-align: center; /* Centraliza o texto */
+        flex: 1;
+        text-align: center;
     }
     
     .main-title {
-        font-size: 4.8rem; /* Aumentado significativamente o tamanho */
+        font-size: 4.8rem; /* Altura compatível com a casa.png */
         font-weight: 700;
         color: #0d6efd;
         margin: 0;
-        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
         letter-spacing: 0.5px;
-        line-height: 1.1; /* Ajustado para o tamanho maior */
+        line-height: 1.1;
     }
 
     .subtitle {
-        font-size: 2.2rem; /* Aumentado significativamente o tamanho */
+        font-size: 2.2rem;
         font-style: italic;
-        color: #000000; /* Cor preta conforme solicitado */
+        color: #000000;
         margin-top: 1rem;
         font-weight: 400;
-        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil no texto */
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     
     @keyframes fadeInUp {
@@ -118,11 +157,12 @@ st.markdown("""
     }
     
     .section-title {
-        font-size: 2rem; /* Ajustado para um tamanho mais razoável para títulos de seção */
+        font-size: 2rem;
         font-weight: 600;
         color: #212529;
         margin-bottom: 1rem;
-        text-align: center; /* Centralizado títulos de seção */
+        text-align: center;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     }
     .param-grid {
         display: grid;
@@ -131,34 +171,36 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
     .param-box {
-        padding: 1.5rem; /* Aumentado o padding */
+        padding: 1.5rem;
         border: 1px solid #dee2e6;
-        border-radius: 12px; /* Bordas mais arredondadas */
+        border-radius: 12px;
         text-align: center;
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Sombra inicial */
-        min-height: 120px; /* Altura mínima aumentada */
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        min-height: 120px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
     }
     .param-box:hover {
-        transform: translateY(-8px) scale(1.03); /* Efeito de escala no hover */
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2); /* Sombra mais pronunciada */
-        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%); /* Mudança de gradiente */
-        border-color: #0d6efd; /* Mudança da cor da borda */
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%);
+        border-color: #0d6efd;
     }
     .param-label {
         font-size: 0.9rem;
         color: #6c757d;
         margin-bottom: 0.5rem;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     }
     .param-value {
         font-size: 1.1rem;
         font-weight: 700;
         color: #0d6efd;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     }
     
     /* Container da tabela com borda fina */
@@ -210,29 +252,65 @@ st.markdown("""
     
     /* Animação de hover nos dados */
     .metric-row:hover {
-        background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%); /* Gradiente no hover */
-        transform: translateX(8px) scale(1.02); /* Movimento e escala */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
-        border-radius: 8px; /* Bordas arredondadas */
-        border-left: 4px solid #0d6efd; /* Borda colorida à esquerda */
+        background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+        transform: translateX(8px) scale(1.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        border-radius: 8px;
+        border-left: 4px solid #0d6efd;
     }
     
     .metric-label {
         color: #6c757d;
         flex: 1;
         padding-right: 1rem;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     }
-        .metric-value {
+    .metric-value {
         font-weight: 600;
         flex: 1;
         text-align: right;
         padding-left: 1rem;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
     }
 
     @keyframes gradient-animation {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
+    }
+    
+    /* Estilos do rodapé */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #0d6efd 0%, #6c757d 100%);
+        color: white;
+        text-align: center;
+        padding: 1rem;
+        font-size: 1.1rem;
+        font-weight: 500;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 1000;
+        animation: slideInUp 0.8s ease-out;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif !important;
+    }
+    
+    @keyframes slideInUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    /* Adiciona espaço no final da página para não sobrepor o rodapé */
+    .main-content {
+        padding-bottom: 80px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -286,7 +364,7 @@ def criar_grafico_pizza(dataframe):
     fig.update_layout(
         title="Composição do Financiamento",
         title_x=0.5,
-        height=800, # Aumentado ainda mais a altura
+        height=800,
         showlegend=False, 
         margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
@@ -309,7 +387,7 @@ def criar_grafico_barras(dataframe):
         title="Evolução das Parcelas por Mês",
         title_x=0.5,
         barmode='stack', 
-        height=800, # Aumentado ainda mais a altura
+        height=800,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -339,7 +417,7 @@ def criar_grafico_linha(dataframe):
     fig.update_layout(
         title="Evolução de Juros, Amortização e Parcela",
         title_x=0.5,
-        height=800, # Aumentado ainda mais a altura
+        height=800,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -354,6 +432,9 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
+# Container principal com classe para espaçamento do rodapé
+st.markdown('<div class="main-content">', unsafe_allow_html=True)
+
 st.markdown(
     f"""
     <div class="title-container">
@@ -410,53 +491,149 @@ st.markdown(f"""
     <div class="param-box"><p class="param-label">Tabela</p><p class="param-value">SAC</p></div>
     <div class="param-box"><p class="param-label">Taxa de juros</p><p class="param-value">{taxa_juros_input:.2f}%</p></div>
     <div class="param-box"><p class="param-label">Juros</p><p class="param-value">a.a</p></div>
-    <div class="param-box"><p class="param-label">Nº de parcelas</p><p class="param-value">{num_parcelas_input}</p></div>
+    <div class="param-box"><p class="param-label">Nº de parcelas</p><p class="param-value">{int(num_parcelas_input)}</p></div>
 </div>
 """, unsafe_allow_html=True)
 
-st.divider()
-
 # Seção de resultados
-if 'simular' in st.session_state and st.session_state.simular:
-    col_sem, col_com = st.columns(2)
-
-    def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
-        total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
-        data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
-        total_amortizado = dataframe["Amortização"].sum()
+if not df_sem_extra.empty:
+    st.markdown('<p class="section-title">📈 Resultados da Simulação</p>', unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown('<div class="metric-table-container">', unsafe_allow_html=True)
+        st.markdown('<h4 style="text-align: center; margin-bottom: 1rem;">💰 Financiamento Padrão</h4>', unsafe_allow_html=True)
+        st.markdown('<div class="metric-table">', unsafe_allow_html=True)
         
-        dados = [
-            ("Valor financiado", format_currency(valor_financiado)), 
-            ("Total a ser pago", format_currency(total_pagar)),
-            ("Total amortizado", format_currency(total_amortizado)),
-            ("Total de juros", format_currency(total_juros)),
-            ("Total de taxas/seguros", format_currency(total_taxas)),
-            ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),
-            ("Quantidade de parcelas", len(dataframe)),
-            ("Valor da primeira parcela", format_currency(dataframe.iloc[0]['Prestação_Total'])),
-            ("Valor da última parcela", format_currency(dataframe.iloc[-1]['Prestação_Total'])),
-            ("Data da última parcela", data_ultima.strftime('%B de %Y')),
-            ("Sistema de amortização", "SAC")
-        ]
-        html = "".join([f"<div class='metric-row'><span class='metric-label'>{l}</span><span class='metric-value'>{v}</span></div>" for l,v in dados])
-        return f"<div class='metric-table-container'><div class='metric-table'>{html}</div></div>"
-
-    with col_sem:
-        st.markdown('<p class="section-title">📋 Sem Amortização Extra</p>', unsafe_allow_html=True)
-        if not df_sem_extra.empty:
-            st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
-            st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
-            st.divider()
-            st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
-            st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
-
-    with col_com:
-        st.markdown('<p class="section-title">🚀 Com Amortização Extra</p>', unsafe_allow_html=True)
+        total_pago = df_sem_extra['Prestação_Total'].sum()
+        total_juros = df_sem_extra['Juros'].sum()
+        total_amortizacao = df_sem_extra['Amortização'].sum()
+        total_taxas = df_sem_extra['Taxas/Seguro'].sum()
+        primeira_parcela = df_sem_extra['Prestação_Total'].iloc[0] if len(df_sem_extra) > 0 else 0
+        ultima_parcela = df_sem_extra['Prestação_Total'].iloc[-1] if len(df_sem_extra) > 0 else 0
+        
+        st.markdown(f"""
+        <div class="metric-row"><span class="metric-label">Total Pago:</span><span class="metric-value">{format_currency(total_pago)}</span></div>
+        <div class="metric-row"><span class="metric-label">Total Juros:</span><span class="metric-value">{format_currency(total_juros)}</span></div>
+        <div class="metric-row"><span class="metric-label">Total Principal:</span><span class="metric-value">{format_currency(total_amortizacao)}</span></div>
+        <div class="metric-row"><span class="metric-label">Total Taxas/Seguro:</span><span class="metric-value">{format_currency(total_taxas)}</span></div>
+        <div class="metric-row"><span class="metric-label">Primeira Parcela:</span><span class="metric-value">{format_currency(primeira_parcela)}</span></div>
+        <div class="metric-row"><span class="metric-label">Última Parcela:</span><span class="metric-value">{format_currency(ultima_parcela)}</span></div>
+        <div class="metric-row"><span class="metric-label">Prazo Total:</span><span class="metric-value">{len(df_sem_extra)} meses</span></div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown('</div></div>', unsafe_allow_html=True)
+    
+    with col2:
         if not df_com_extra.empty:
-            st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
-            st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
-            st.divider()
-            st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
-            st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
+            st.markdown('<div class="metric-table-container">', unsafe_allow_html=True)
+            st.markdown('<h4 style="text-align: center; margin-bottom: 1rem;">💪 Com Amortização Extra</h4>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-table">', unsafe_allow_html=True)
+            
+            total_pago_extra = df_com_extra['Prestação_Total'].sum()
+            total_juros_extra = df_com_extra['Juros'].sum()
+            total_amortizacao_extra = df_com_extra['Amortização'].sum()
+            total_taxas_extra = df_com_extra['Taxas/Seguro'].sum()
+            primeira_parcela_extra = df_com_extra['Prestação_Total'].iloc[0] if len(df_com_extra) > 0 else 0
+            ultima_parcela_extra = df_com_extra['Prestação_Total'].iloc[-1] if len(df_com_extra) > 0 else 0
+            
+            economia_total = total_pago - total_pago_extra
+            economia_juros = total_juros - total_juros_extra
+            reducao_prazo = len(df_sem_extra) - len(df_com_extra)
+            
+            st.markdown(f"""
+            <div class="metric-row"><span class="metric-label">Total Pago:</span><span class="metric-value">{format_currency(total_pago_extra)}</span></div>
+            <div class="metric-row"><span class="metric-label">Total Juros:</span><span class="metric-value">{format_currency(total_juros_extra)}</span></div>
+            <div class="metric-row"><span class="metric-label">Total Principal:</span><span class="metric-value">{format_currency(total_amortizacao_extra)}</span></div>
+            <div class="metric-row"><span class="metric-label">Total Taxas/Seguro:</span><span class="metric-value">{format_currency(total_taxas_extra)}</span></div>
+            <div class="metric-row"><span class="metric-label">Primeira Parcela:</span><span class="metric-value">{format_currency(primeira_parcela_extra)}</span></div>
+            <div class="metric-row"><span class="metric-label">Última Parcela:</span><span class="metric-value">{format_currency(ultima_parcela_extra)}</span></div>
+            <div class="metric-row"><span class="metric-label">Prazo Total:</span><span class="metric-value">{len(df_com_extra)} meses</span></div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('</div></div>', unsafe_allow_html=True)
+            
+            # Seção de economia
+            st.markdown('<div class="metric-table-container" style="background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border-color: #28a745;">', unsafe_allow_html=True)
+            st.markdown('<h4 style="text-align: center; margin-bottom: 1rem; color: #155724;">💰 Economia Obtida</h4>', unsafe_allow_html=True)
+            st.markdown('<div class="metric-table">', unsafe_allow_html=True)
+            
+            st.markdown(f"""
+            <div class="metric-row"><span class="metric-label">Economia Total:</span><span class="metric-value" style="color: #28a745;">{format_currency(economia_total)}</span></div>
+            <div class="metric-row"><span class="metric-label">Economia em Juros:</span><span class="metric-value" style="color: #28a745;">{format_currency(economia_juros)}</span></div>
+            <div class="metric-row"><span class="metric-label">Redução de Prazo:</span><span class="metric-value" style="color: #28a745;">{reducao_prazo} meses</span></div>
+            """, unsafe_allow_html=True)
+            
+            st.markdown('</div></div>', unsafe_allow_html=True)
+    
+    # Gráficos
+    st.markdown('<p class="section-title">📊 Análise Gráfica</p>', unsafe_allow_html=True)
+    
+    tab1, tab2, tab3 = st.tabs(["🥧 Composição", "📊 Evolução Mensal", "📈 Tendências"])
+    
+    with tab1:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
+        with col2:
+            if not df_com_extra.empty:
+                st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
+    
+    with tab2:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
+        with col2:
+            if not df_com_extra.empty:
+                st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
+    
+    with tab3:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
+        with col2:
+            if not df_com_extra.empty:
+                st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
+    
+    # Tabela detalhada
+    with st.expander("📋 Tabela Detalhada de Parcelas"):
+        if not df_com_extra.empty:
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader("Financiamento Padrão")
+                st.dataframe(df_sem_extra.style.format({
+                    'Prestação_Total': 'R$ {:,.2f}',
+                    'Juros': 'R$ {:,.2f}',
+                    'Amortização': 'R$ {:,.2f}',
+                    'Saldo_Devedor': 'R$ {:,.2f}',
+                    'Taxas/Seguro': 'R$ {:,.2f}'
+                }), use_container_width=True)
+            with col2:
+                st.subheader("Com Amortização Extra")
+                st.dataframe(df_com_extra.style.format({
+                    'Prestação_Total': 'R$ {:,.2f}',
+                    'Juros': 'R$ {:,.2f}',
+                    'Amortização': 'R$ {:,.2f}',
+                    'Saldo_Devedor': 'R$ {:,.2f}',
+                    'Taxas/Seguro': 'R$ {:,.2f}'
+                }), use_container_width=True)
         else:
-            st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
+            st.dataframe(df_sem_extra.style.format({
+                'Prestação_Total': 'R$ {:,.2f}',
+                'Juros': 'R$ {:,.2f}',
+                'Amortização': 'R$ {:,.2f}',
+                'Saldo_Devedor': 'R$ {:,.2f}',
+                'Taxas/Seguro': 'R$ {:,.2f}'
+            }), use_container_width=True)
+
+# Fechamento do container principal
+st.markdown('</div>', unsafe_allow_html=True)
+
+# Rodapé com frase motivadora
+st.markdown(f"""
+<div class="footer">
+    {frase_rodape}
+</div>
+""", unsafe_allow_html=True)
+
