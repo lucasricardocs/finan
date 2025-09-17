@@ -19,106 +19,258 @@ st.set_page_config(
 # -------------------------------
 PRIMARY_BLUE = "#0d6efd"
 SANTANDER_RED = "#EC0000"
+SUCCESS_GREEN = "#198754"
 TEXT_COLOR = "#212529"
 SUBTLE_TEXT_COLOR = "#6c757d"
 BACKGROUND_COLOR = "#f8f9fa"
 BORDER_COLOR = "#dee2e6"
 COMPONENT_BACKGROUND = "#ffffff"
+LIGHT_BLUE = "#e3f2fd"
+SHADOW_COLOR = "rgba(0,0,0,0.08)"
 
 st.markdown(f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     html, body, [class*="st-"] {{
-        font-family: 'Open Sans', sans-serif;
+        font-family: 'Inter', sans-serif;
     }}
+    
     .stApp {{
-        background-color: {BACKGROUND_COLOR};
+        background: linear-gradient(135deg, {BACKGROUND_COLOR} 0%, #e8f4fd 100%);
         color: {TEXT_COLOR};
     }}
     
     /* --- CORREÇÃO DO ÍCONE DO EXPANSÍVEL --- */
-    [data-testid="stExpander"] summary {{
-      position: relative;
-      padding-left: 2rem;
+    [data-testid="stExpander"] {{
+        border: 1px solid {BORDER_COLOR};
+        border-radius: 12px;
+        box-shadow: 0 2px 8px {SHADOW_COLOR};
+        background: {COMPONENT_BACKGROUND};
+        margin-bottom: 1.5rem;
     }}
+    
+    [data-testid="stExpander"] summary {{
+        position: relative;
+        padding: 1.5rem 2rem;
+        background: linear-gradient(135deg, {PRIMARY_BLUE} 0%, #4dabf7 100%);
+        color: white;
+        font-weight: 600;
+        font-size: 1.1rem;
+        border-radius: 12px 12px 0 0;
+        margin: -1px -1px 0 -1px;
+    }}
+    
+    [data-testid="stExpander"][open] > summary {{
+        border-radius: 12px 12px 0 0;
+    }}
+    
     /* Esconde o ícone quebrado original do Streamlit */
     [data-testid="stExpander"] summary .st-emotion-cache-1282ie9, 
     [data-testid="stExpander"] summary .st-emotion-cache-g85b5l {{
         display: none;
     }}
+    
     /* Cria nosso próprio ícone de seta (▶) */
     [data-testid="stExpander"] summary::before {{
-        content: '▶';
-        font-size: 14px;
-        color: {SUBTLE_TEXT_COLOR};
-        position: absolute;
-        left: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%) rotate(0deg);
-        transition: transform 0.2s ease-in-out;
+        content: '⚙️';
+        font-size: 18px;
+        margin-right: 12px;
     }}
-    /* Gira nosso ícone (▼) quando o expansível está aberto */
-    [data-testid="stExpander"][open] > summary::before {{
-        transform: translateY(-50%) rotate(90deg);
+    
+    [data-testid="stExpander"] summary::after {{
+        content: '▼';
+        font-size: 16px;
+        position: absolute;
+        right: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%) rotate(-90deg);
+        transition: transform 0.3s ease;
+    }}
+    
+    [data-testid="stExpander"][open] > summary::after {{
+        transform: translateY(-50%) rotate(0deg);
     }}
 
     /* --- Contêineres (Cards) --- */
     .card {{
-        background-color: {COMPONENT_BACKGROUND};
-        border-radius: 0.5rem;
-        padding: 25px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        background: {COMPONENT_BACKGROUND};
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 8px 32px {SHADOW_COLOR};
         margin-bottom: 2rem;
         height: 100%;
+        border: 1px solid rgba(255,255,255,0.2);
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
     }}
+    
+    .card::before {{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, {PRIMARY_BLUE} 0%, {SUCCESS_GREEN} 50%, {SANTANDER_RED} 100%);
+    }}
+    
     .card-title {{
-        font-size: 1.25rem;
-        font-weight: 600;
+        font-size: 1.4rem;
+        font-weight: 700;
         color: {TEXT_COLOR};
-        margin-bottom: 1.5rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid {BORDER_COLOR};
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid {LIGHT_BLUE};
+        position: relative;
     }}
+    
+    .card-title::after {{
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 60px;
+        height: 2px;
+        background: {PRIMARY_BLUE};
+    }}
+    
     .param-grid {{
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1rem;
     }}
+    
     .param-box {{
-        padding: 1rem;
+        padding: 1.5rem;
         border: 1px solid {BORDER_COLOR};
-        border-radius: 0.25rem;
+        border-radius: 12px;
         text-align: center;
+        background: linear-gradient(135deg, {COMPONENT_BACKGROUND} 0%, {LIGHT_BLUE} 100%);
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(13, 110, 253, 0.1);
     }}
+    
+    .param-box:hover {{
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(13, 110, 253, 0.15);
+    }}
+    
     .param-label {{
         font-size: 0.9rem;
         color: {SUBTLE_TEXT_COLOR};
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }}
+    
     .param-value {{
-        font-size: 1.1rem;
-        font-weight: 600;
+        font-size: 1.2rem;
+        font-weight: 700;
         color: {PRIMARY_BLUE};
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
     }}
+    
     .metric-table {{
         width: 100%;
         margin-bottom: 2rem;
+        background: {LIGHT_BLUE};
+        border-radius: 12px;
+        padding: 1.5rem;
     }}
+    
     .metric-row {{
         display: flex;
         justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid #f0f0f0;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid rgba(13, 110, 253, 0.1);
+        transition: background-color 0.2s ease;
     }}
+    
+    .metric-row:hover {{
+        background-color: rgba(13, 110, 253, 0.05);
+        border-radius: 8px;
+        margin: 0 -0.5rem;
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }}
+    
+    .metric-row:last-child {{
+        border-bottom: none;
+    }}
+    
     .metric-label {{
         color: {SUBTLE_TEXT_COLOR};
-        font-size: 0.9rem;
-    }}
-    .metric-value {{
-        font-weight: 600;
-        color: {TEXT_COLOR};
         font-size: 0.95rem;
+        font-weight: 500;
     }}
+    
+    .metric-value {{
+        font-weight: 700;
+        color: {TEXT_COLOR};
+        font-size: 1rem;
+    }}
+    
+    /* Melhorando inputs do Streamlit */
+    .stNumberInput > div > div > input {{
+        border-radius: 8px;
+        border: 2px solid {BORDER_COLOR};
+        padding: 12px 16px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }}
+    
+    .stNumberInput > div > div > input:focus {{
+        border-color: {PRIMARY_BLUE};
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }}
+    
+    .stDateInput > div > div > input {{
+        border-radius: 8px;
+        border: 2px solid {BORDER_COLOR};
+        padding: 12px 16px;
+        transition: all 0.3s ease;
+    }}
+    
+    .stDateInput > div > div > input:focus {{
+        border-color: {PRIMARY_BLUE};
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }}
+    
+    .stRadio > div {{
+        background: {LIGHT_BLUE};
+        border-radius: 12px;
+        padding: 1rem;
+    }}
+    
+    /* Título principal */
+    h1 {{
+        background: linear-gradient(135deg, {PRIMARY_BLUE} 0%, {SUCCESS_GREEN} 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        font-weight: 800;
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }}
+    
+    /* Melhorando as colunas */
+    .stColumn > div {{
+        padding: 0 0.75rem;
+    }}
+    
+    /* Info box styling */
+    .stInfo {{
+        background: linear-gradient(135deg, {LIGHT_BLUE} 0%, rgba(13, 110, 253, 0.1) 100%);
+        border: 1px solid {PRIMARY_BLUE};
+        border-radius: 12px;
+    }}
+    
     </style>
     """, unsafe_allow_html=True)
 
@@ -153,52 +305,206 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
     return pd.DataFrame(dados)
 
 # -------------------------------
-# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS (PLOTLY)
+# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS (PLOTLY) - MELHORADAS
 # -------------------------------
 def criar_grafico_pizza(dataframe):
     if dataframe.empty: return go.Figure()
-    labels = ['Principal', 'Juros', 'Taxas/Seguro']; values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
-    colors = [PRIMARY_BLUE, SANTANDER_RED, '#aaaaaa']
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, marker_colors=colors, hovertemplate="<b>%{label}</b><br>R$ %{value:,.2f}<br>%{percent}<extra></extra>")])
-    fig.update_layout(height=300, showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(l=20, r=20, t=20, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    
+    labels = ['Principal', 'Juros', 'Taxas/Seguro']
+    values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
+    colors = [PRIMARY_BLUE, SANTANDER_RED, '#6c757d']
+    
+    # Calculando porcentagens
+    total = sum(values)
+    percentages = [(value/total)*100 for value in values]
+    
+    # Criando labels customizadas com nome e porcentagem
+    custom_labels = [f"{label}<br>{percent:.1f}%" for label, percent in zip(labels, percentages)]
+    
+    fig = go.Figure(data=[go.Pie(
+        labels=custom_labels, 
+        values=values, 
+        hole=.4, 
+        marker=dict(
+            colors=colors,
+            line=dict(color='white', width=2)  # strokewidth=2
+        ),
+        textinfo='label',
+        textfont=dict(size=12, color='white'),
+        hovertemplate="<b>%{label}</b><br>R$ %{value:,.2f}<extra></extra>"
+    )])
+    
+    fig.update_layout(
+        height=450,  # Aumentado de 300 para 450
+        showlegend=True, 
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=-0.1, 
+            xanchor="center", 
+            x=0.5,
+            font=dict(size=12)
+        ), 
+        margin=dict(l=20, r=20, t=40, b=80), 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)',
+        title=dict(
+            text="Composição Total do Financiamento",
+            x=0.5,
+            font=dict(size=16, color=TEXT_COLOR)
+        )
+    )
     return fig
 
 def criar_grafico_barras(dataframe):
     if dataframe.empty: return go.Figure()
-    df_view = dataframe[dataframe['Mês'] <= 36]
+    
+    # Filtrando para mostrar de 5 em 5 anos (60 meses)
+    max_mes = min(len(dataframe), 180)  # Máximo de 15 anos para visualização
+    step = 60  # 5 anos = 60 meses
+    meses_selecionados = list(range(12, max_mes + 1, step))  # Começando do mês 12
+    if 1 not in meses_selecionados:
+        meses_selecionados.insert(0, 1)  # Sempre incluir o primeiro mês
+    
+    df_view = dataframe[dataframe['Mês'].isin(meses_selecionados)]
+    
     fig = go.Figure()
-    fig.add_trace(go.Bar(name='Amortização', x=df_view['Mês'], y=df_view['Amortização'], marker_color=PRIMARY_BLUE))
-    fig.add_trace(go.Bar(name='Juros', x=df_view['Mês'], y=df_view['Juros'], marker_color=SANTANDER_RED))
-    fig.add_trace(go.Bar(name='Taxas/Seguro', x=df_view['Mês'], y=df_view['Taxas/Seguro'], marker_color='#aaaaaa'))
-    fig.update_layout(barmode='stack', height=300, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20, r=20, t=20, b=20), xaxis=dict(showgrid=False, title=''), yaxis=dict(showgrid=False, title=''))
+    fig.add_trace(go.Bar(
+        name='Amortização', 
+        x=[f"Ano {(m-1)//12 + 1}" for m in df_view['Mês']], 
+        y=df_view['Amortização'], 
+        marker_color=PRIMARY_BLUE,
+        hovertemplate="<b>Amortização</b><br>R$ %{y:,.2f}<extra></extra>"
+    ))
+    fig.add_trace(go.Bar(
+        name='Juros', 
+        x=[f"Ano {(m-1)//12 + 1}" for m in df_view['Mês']], 
+        y=df_view['Juros'], 
+        marker_color=SANTANDER_RED,
+        hovertemplate="<b>Juros</b><br>R$ %{y:,.2f}<extra></extra>"
+    ))
+    fig.add_trace(go.Bar(
+        name='Taxas/Seguro', 
+        x=[f"Ano {(m-1)//12 + 1}" for m in df_view['Mês']], 
+        y=df_view['Taxas/Seguro'], 
+        marker_color='#6c757d',
+        hovertemplate="<b>Taxas/Seguro</b><br>R$ %{y:,.2f}<extra></extra>"
+    ))
+    
+    fig.update_layout(
+        barmode='stack', 
+        height=450,  # Aumentado de 300 para 450
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=1.02, 
+            xanchor="center", 
+            x=0.5,
+            font=dict(size=12)
+        ), 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)', 
+        margin=dict(l=20, r=20, t=60, b=20), 
+        xaxis=dict(
+            showgrid=False, 
+            title='Período',
+            titlefont=dict(size=14)
+        ), 
+        yaxis=dict(
+            showgrid=True, 
+            gridcolor='rgba(0,0,0,0.1)',
+            title='Valor (R$)',
+            titlefont=dict(size=14)
+        ),
+        title=dict(
+            text="Evolução das Parcelas (5 em 5 anos)",
+            x=0.5,
+            font=dict(size=16, color=TEXT_COLOR)
+        )
+    )
     return fig
 
 def criar_grafico_linha(dataframe):
     if dataframe.empty: return go.Figure()
-    df_view = dataframe[dataframe['Mês'] <= 36]
+    
+    # Filtrando para mostrar de 5 em 5 anos (60 meses)
+    max_mes = min(len(dataframe), 180)  # Máximo de 15 anos para visualização
+    step = 60  # 5 anos = 60 meses
+    meses_selecionados = list(range(12, max_mes + 1, step))  # Começando do mês 12
+    if 1 not in meses_selecionados:
+        meses_selecionados.insert(0, 1)  # Sempre incluir o primeiro mês
+    
+    df_view = dataframe[dataframe['Mês'].isin(meses_selecionados)]
+    
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Prestação_Total'], name='Parcela', mode='lines', line=dict(color=PRIMARY_BLUE, width=2.5)))
-    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização mensal', mode='lines', line=dict(color=SANTANDER_RED, width=2.5)))
-    fig.update_layout(height=300, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', margin=dict(l=20, r=20, t=20, b=20), xaxis=dict(showgrid=False, title=''), yaxis=dict(showgrid=False, title=''))
+    fig.add_trace(go.Scatter(
+        x=[f"Ano {(m-1)//12 + 1}" for m in df_view['Mês']], 
+        y=df_view['Prestação_Total'], 
+        name='Parcela Total', 
+        mode='lines+markers', 
+        line=dict(color=PRIMARY_BLUE, width=3),
+        marker=dict(size=8, color=PRIMARY_BLUE),
+        hovertemplate="<b>Parcela Total</b><br>R$ %{y:,.2f}<extra></extra>"
+    ))
+    fig.add_trace(go.Scatter(
+        x=[f"Ano {(m-1)//12 + 1}" for m in df_view['Mês']], 
+        y=df_view['Amortização'], 
+        name='Amortização Mensal', 
+        mode='lines+markers', 
+        line=dict(color=SANTANDER_RED, width=3),
+        marker=dict(size=8, color=SANTANDER_RED),
+        hovertemplate="<b>Amortização Mensal</b><br>R$ %{y:,.2f}<extra></extra>"
+    ))
+    
+    fig.update_layout(
+        height=450,  # Aumentado de 300 para 450
+        legend=dict(
+            orientation="h", 
+            yanchor="bottom", 
+            y=1.02, 
+            xanchor="center", 
+            x=0.5,
+            font=dict(size=12)
+        ), 
+        paper_bgcolor='rgba(0,0,0,0)', 
+        plot_bgcolor='rgba(0,0,0,0)', 
+        margin=dict(l=20, r=20, t=60, b=20), 
+        xaxis=dict(
+            showgrid=False, 
+            title='Período',
+            titlefont=dict(size=14)
+        ), 
+        yaxis=dict(
+            showgrid=True, 
+            gridcolor='rgba(0,0,0,0.1)',
+            title='Valor (R$)',
+            titlefont=dict(size=14)
+        ),
+        title=dict(
+            text="Evolução dos Valores (5 em 5 anos)",
+            x=0.5,
+            font=dict(size=16, color=TEXT_COLOR)
+        )
+    )
     return fig
 
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.title("Simulação de Financiamento")
+st.title("🏦 Simulação de Financiamento")
 
-with st.expander("⚙️ Configurar Parâmetros da Simulação", expanded=True):
+with st.expander("Configurar Parâmetros da Simulação", expanded=True):
     col1, col2, col3 = st.columns(3)
     with col1:
-        valor_imovel_input = st.number_input("Valor do Imóvel", value=625000.0, format="%.2f")
-        entrada_input = st.number_input("Valor da Entrada", value=125000.0, format="%.2f")
-        taxa_juros_input = st.number_input("Taxa de Juros Anual (%)", value=9.93, format="%.2f")
+        valor_imovel_input = st.number_input("💰 Valor do Imóvel", value=625000.0, format="%.2f")
+        entrada_input = st.number_input("💵 Valor da Entrada", value=125000.0, format="%.2f")
+        taxa_juros_input = st.number_input("📈 Taxa de Juros Anual (%)", value=9.93, format="%.2f")
     with col2:
-        num_parcelas_input = st.number_input("Nº de Parcelas", value=360, step=12)
-        data_inicio_input = st.date_input("Início do Financiamento", value=datetime(2025, 9, 16))
+        num_parcelas_input = st.number_input("📅 Nº de Parcelas", value=360, step=12)
+        data_inicio_input = st.date_input("🗓️ Início do Financiamento", value=datetime(2025, 9, 16))
     with col3:
-        amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=500.0, format="%.2f")
-        tipo_amortizacao = st.radio("Objetivo da Amortização:", ("Reduzir prazo", "Reduzir parcela"), horizontal=True)
+        amortizacao_extra = st.number_input("💪 Valor Extra Mensal (R$)", value=500.0, format="%.2f")
+        tipo_amortizacao = st.radio("🎯 Objetivo da Amortização:", ("Reduzir prazo", "Reduzir parcela"), horizontal=True)
 
 # --- Cálculos ---
 valor_financiado_input = valor_imovel_input - entrada_input
@@ -211,12 +517,12 @@ if amortizacao_extra > 0:
 
 # --- Seção de Display dos Parâmetros ---
 with styled_container("card"):
-    st.markdown("<p class='card-title' style='border:none; margin-bottom: 0;'>Parâmetros de financiamento</p>", unsafe_allow_html=True)
+    st.markdown("<p class='card-title'>📊 Parâmetros de Financiamento</p>", unsafe_allow_html=True)
     st.markdown("<div class='param-grid'>"
                 f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>R$ {valor_financiado_input:,.2f}</p></div>"
                 f"<div class='param-box'><p class='param-label'>Início</p><p class='param-value'>{data_inicio_input.strftime('%B de %Y')}</p></div>"
                 f"<div class='param-box'><p class='param-label'>Tabela</p><p class='param-value'>SAC</p></div>"
-                f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f} %</p></div>"
+                f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f}%</p></div>"
                 f"<div class='param-box'><p class='param-label'>Juros</p><p class='param-value'>a.a</p></div>"
                 f"<div class='param-box'><p class='param-label'>Nº de parcelas</p><p class='param-value'>{num_parcelas_input}</p></div>"
                 "</div>", unsafe_allow_html=True)
@@ -237,22 +543,20 @@ def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
 
 with col_sem:
     with styled_container("card"):
-        st.markdown("<p class='card-title'>Sem amortização extra</p>", unsafe_allow_html=True)
+        st.markdown("<p class='card-title'>📋 Sem Amortização Extra</p>", unsafe_allow_html=True)
         if not df_sem_extra.empty:
             st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
             st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
-            st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
             st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
             st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
 
 with col_com:
     with styled_container("card"):
-        st.markdown("<p class='card-title'>Com amortização extra</p>", unsafe_allow_html=True)
+        st.markdown("<p class='card-title'>🚀 Com Amortização Extra</p>", unsafe_allow_html=True)
         if not df_com_extra.empty:
             st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
             st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
-            st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
             st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
             st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
         else:
-            st.info("Insira um valor de amortização extra para ver a comparação.")
+            st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
