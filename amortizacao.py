@@ -1,4 +1,9 @@
-# simulador_financiamento_final_corrigido.py
+/* Info box styling */
+    .stInfo {{
+        background: linear-gradient(135deg, {LIGHT_BLUE} 0%, rgba(13, 110, 253, 0.1) 100%);
+        border: 1px solid {PRIMARY_BLUE};
+        border-radius: 12px;
+    }}# simulador_financiamento_final_corrigido.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -447,17 +452,16 @@ else:
     valor_financiado_input = valor_imovel_input - entrada_input
 
 # --- Seção de Display dos Parâmetros ---
-if 'simular' in st.session_state and st.session_state.simular:
-    with styled_container("card"):
-        st.markdown("<p class='card-title'>📊 Parâmetros de Financiamento</p>", unsafe_allow_html=True)
-        st.markdown("<div class='param-grid'>"
-                    f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>R$ {valor_financiado_input:,.2f}</p></div>"
-                    f"<div class='param-box'><p class='param-label'>Início</p><p class='param-value'>{data_inicio_input.strftime('%B de %Y')}</p></div>"
-                    f"<div class='param-box'><p class='param-label'>Tabela</p><p class='param-value'>SAC</p></div>"
-                    f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f}%</p></div>"
-                    f"<div class='param-box'><p class='param-label'>Juros</p><p class='param-value'>a.a</p></div>"
-                    f"<div class='param-box'><p class='param-label'>Nº de parcelas</p><p class='param-value'>{num_parcelas_input}</p></div>"
-                    "</div>", unsafe_allow_html=True)
+with styled_container("card"):
+    st.markdown("<p class='card-title'>📊 Parâmetros de Financiamento</p>", unsafe_allow_html=True)
+    st.markdown("<div class='param-grid'>"
+                f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>R$ {valor_financiado_input:,.2f}</p></div>"
+                f"<div class='param-box'><p class='param-label'>Início</p><p class='param-value'>{data_inicio_input.strftime('%B de %Y')}</p></div>"
+                f"<div class='param-box'><p class='param-label'>Tabela</p><p class='param-value'>SAC</p></div>"
+                f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f}%</p></div>"
+                f"<div class='param-box'><p class='param-label'>Juros</p><p class='param-value'>a.a</p></div>"
+                f"<div class='param-box'><p class='param-label'>Nº de parcelas</p><p class='param-value'>{num_parcelas_input}</p></div>"
+                "</div>", unsafe_allow_html=True)
 
 # --- Seção de Resultados ---
 if 'simular' in st.session_state and st.session_state.simular:
