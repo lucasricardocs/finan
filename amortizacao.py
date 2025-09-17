@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -38,46 +39,61 @@ st.markdown("""
     /* Container animado para o título */
     .title-container {
         border: 1px solid #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem auto;
-        background-color: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        animation: fadeInUp 0.8s ease-out;
+        border-radius: 12px; /* Bordas mais arredondadas */
+        padding: 2rem; /* Aumentado o padding */
+        margin: 2rem auto; /* Aumentado a margem */
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
+        animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite; /* Múltiplas animações */
         text-align: center;
-        display: flex;        align-items: center;  justify-content: center;
-        gap: 1rem;
-        /* height: 15rem; */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem; /* Aumentado o gap */
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
+        min-height: 300px; /* Altura mínima para o container */
+    }
+    .title-container:hover {
+        transform: translateY(-8px) scale(1.02); /* Efeito de escala no hover */
+        box-shadow: 0 12px 24px rgba(0,0,0,0.25); /* Sombra ainda mais pronunciada no hover */
+        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%); /* Mudança de gradiente no hover */
     }
     
     .title-logo {
-        /* height: 3rem;
-        width: 3rem; */
-        max-height: 100%;
-        max-width: 100%;
+        height: auto; /* Removido limitação de altura */
+        width: auto; /* Removido limitação de largura */
+        max-height: none; /* Removido limitação máxima de altura */
+        max-width: none; /* Removido limitação máxima de largura */
+        min-height: 200px; /* Tamanho mínimo para garantir visibilidade */
+        min-width: 200px; /* Tamanho mínimo para garantir visibilidade */
         object-fit: contain;
+        margin-bottom: 1rem; /* Aumentado espaçamento entre logo e título */
     }
     
     .main-title {
-        font-size: 3rem;
+        font-size: 4.5rem; /* Aumentado ainda mais o tamanho da fonte do título */
         font-weight: 700;
         color: #0d6efd;
         margin: 0;
         font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         letter-spacing: 0.5px;
+        line-height: 1.2; /* Melhor espaçamento entre linhas */
     }
 
     .subtitle {
-        font-size: 1.2rem;
+        font-size: 1.8rem; /* Aumentado ainda mais o tamanho da fonte do subtítulo */
         font-style: italic;
-        color: #212529;
-        margin-top: 0.5rem;
+        color: #000000; /* Cor preta conforme solicitado */
+        margin-top: 0.8rem;
+        font-weight: 400;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil no texto */
     }
     
     @keyframes fadeInUp {
         from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
         }
         to {
             opacity: 1;
@@ -85,11 +101,21 @@ st.markdown("""
         }
     }
     
+    @keyframes pulseGlow {
+        0%, 100% {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        50% {
+            box-shadow: 0 6px 16px rgba(13, 110, 253, 0.2);
+        }
+    }
+    
     .section-title {
-        font-size: 6rem;
+        font-size: 2rem; /* Ajustado para um tamanho mais razoável para títulos de seção */
         font-weight: 600;
         color: #212529;
         margin-bottom: 1rem;
+        text-align: center; /* Centralizado títulos de seção */
     }
     .param-grid {
         display: grid;
@@ -98,16 +124,24 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
     .param-box {
-        padding: 1rem;
+        padding: 1.5rem; /* Aumentado o padding */
         border: 1px solid #dee2e6;
-        border-radius: 8px;
+        border-radius: 12px; /* Bordas mais arredondadas */
         text-align: center;
-        background-color: white;
-        transition: all 0.3s ease;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Sombra inicial */
+        min-height: 120px; /* Altura mínima aumentada */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
     .param-box:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        transform: translateY(-8px) scale(1.03); /* Efeito de escala no hover */
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2); /* Sombra mais pronunciada */
+        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%); /* Mudança de gradiente */
+        border-color: #0d6efd; /* Mudança da cor da borda */
     }
     .param-label {
         font-size: 0.9rem;
@@ -169,10 +203,11 @@ st.markdown("""
     
     /* Animação de hover nos dados */
     .metric-row:hover {
-        background-color: #f8f9fa;
-        transform: translateX(5px);
-        border-radius: 4px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%); /* Gradiente no hover */
+        transform: translateX(8px) scale(1.02); /* Movimento e escala */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
+        border-radius: 8px; /* Bordas arredondadas */
+        border-left: 4px solid #0d6efd; /* Borda colorida à esquerda */
     }
     
     .metric-label {
@@ -188,11 +223,6 @@ st.markdown("""
     }
 
     @keyframes gradient-animation {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-    </style>ames gradient-animation {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
@@ -249,7 +279,7 @@ def criar_grafico_pizza(dataframe):
     fig.update_layout(
         title="Composição do Financiamento",
         title_x=0.5,
-        height=700,
+        height=800, # Aumentado ainda mais a altura
         showlegend=False, 
         margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
@@ -271,8 +301,8 @@ def criar_grafico_barras(dataframe):
     fig.update_layout(
         title="Evolução das Parcelas por Mês",
         title_x=0.5,
-        barmode=\'stack\', 
-        height=700,
+        barmode='stack', 
+        height=800, # Aumentado ainda mais a altura
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -302,7 +332,7 @@ def criar_grafico_linha(dataframe):
     fig.update_layout(
         title="Evolução de Juros, Amortização e Parcela",
         title_x=0.5,
-        height=700,
+        height=800, # Aumentado ainda mais a altura
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -317,7 +347,17 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.markdown('<div class="title-container"><img src="data:image/png;base64,' + base64.b64encode(open("casa.png", "rb").read()).decode() + '" class="title-logo" alt="Logo"><p class="main-title">🏦 Simulação de Financiamento e Amortização</p><p class="subtitle">*Seu futuro financeiro, planejado hoje.*</p></div>', unsafe_allow_html=True)
+st.markdown(
+    '''
+    <div class=
+
+title-container"><img src="data:image/png;base64,
+    " + base64.b64encode(open("casa.png", "rb").read()).decode() + 
+    "" class="title-logo" alt="Logo">
+    <p class="main-title">🏦 Simulação de Financiamento e Amortização</p>
+    <p class="subtitle">Transformando sonhos em realidade financeira</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # Seção de parâmetros
 with st.expander("Configurar Parâmetros da Simulação", expanded=True):
@@ -413,3 +453,4 @@ if 'simular' in st.session_state and st.session_state.simular:
             st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
         else:
             st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
+
