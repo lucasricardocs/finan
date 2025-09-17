@@ -493,7 +493,7 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 st.title("🏦 Simulação de Financiamento")
 
-with st.expander("Configurar Parâmetros da Simulação", expanded=True):
+with st.expander("Configurar Parâmetros da Simulação", expanded=False):
     col1, col2, col3 = st.columns(3)
     with col1:
         valor_imovel_input = st.number_input("💰 Valor do Imóvel", value=625000.0, format="%.2f")
