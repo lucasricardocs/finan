@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 # CONFIGURAÇÃO GERAL
 # -------------------------------
 st.set_page_config(
-    page_title="Simulação de Financiamento",
+    page_title="Simulação de Financiamento & Amortização",
     page_icon="🏦",
     layout="wide",
 )
@@ -34,7 +34,7 @@ st.markdown("""
         background-color: #f8f9fa;
     }
     .main-title {
-        font-size: 2.5rem;
+        font-size: 6rem;
         font-weight: 700;
         color: #0d6efd;
         text-align: center;
@@ -193,7 +193,7 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.markdown('<p class="main-title">🏦 Simulação de Financiamento</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">🏦 Simulação de Financiamento e Amortização</p>', unsafe_allow_html=True)
 
 # Seção de parâmetros
 with st.expander("Configurar Parâmetros da Simulação", expanded=True):
