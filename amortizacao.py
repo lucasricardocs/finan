@@ -1,33 +1,62 @@
-# simulador_financiamento_bokeh_ui.py
+Okay, entendi perfeitamente\! Vamos refatorar a interface para usar **Plotly** para os gráficos, aplicar os ajustes de estilo que você pediu (borda nos gráficos de pizza, bordas nos inputs) e, ao mesmo tempo, melhorar a estética geral da UI para um visual mais limpo e moderno.
+
+A Plotly é excelente para interatividade e customização, e vamos aproveitá-la ao máximo.
+
+### 🎨 O que há de novo nesta versão com Plotly e UI aprimorada:
+
+1.  **Gráficos com Plotly**: Todos os gráficos (pizza, saldo devedor, composição mensal e evolução da parcela) foram reimplementados usando Plotly, trazendo sua interatividade nativa e alta fidelidade visual.
+
+2.  **Gráfico de Pizza com Borda (stroke)**:
+
+      * Implementado com `hovertemplate` para exibir informações detalhadas ao passar o mouse.
+      * Ajustado para ter `line.width=2` e `line.color='white'` para criar um **borda (stroke) branca de 2px**, dando mais destaque às fatias.
+
+3.  **Borda nos Inputs (strokewidth=1 e cor cinza escuro)**:
+
+      * Adicionei estilos CSS para aplicar uma borda sutil (`1px solid #6c757d` - cinza escuro) a todos os `st.number_input`, `st.date_input` e `st.radio`, destacando os campos de entrada de forma elegante.
+
+4.  **Melhorias na UI Geral**:
+
+      * **Padding e Espaçamento**: Ajustes finos de padding e margin para uma distribuição mais equilibrada dos elementos, melhorando o "respiro" visual.
+      * **Tipografia Refinada**: Mantive a fonte `Open Sans` e ajustei os pesos e tamanhos para uma hierarquia visual mais clara.
+      * **Cores Consistentes**: A paleta de cores (cinza claro de fundo, branco para componentes, vermelho Santander e azul primário) foi mantida e aplicada de forma mais coesa.
+      * **Indicador de Valor Financiado**: O `st.info` foi estilizado para se integrar melhor, mostrando claramente o valor financiado logo abaixo dos parâmetros.
+      * **Remoção de Borda Interna nos Gráficos**: Garanti que os gráficos Plotly tenham `paper_bgcolor='rgba(0,0,0,0)'` e `plot_bgcolor='rgba(0,0,0,0)'`, além de remover o grid, mantendo o fundo transparente e limpo.
+
+Este código reflete a sua solicitação com uma UI mais polida e gráficos Plotly de alta qualidade.
+
+-----
+
+### Código Completo com Gráficos Plotly e UI Melhorada
+
+```python
+# simulador_financiamento_plotly_ui.py
 import streamlit as st
 import pandas as pd
+import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from math import pi
-
-# Importações do Bokeh
-from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource, HoverTool, NumeralTickFormatter
-from bokeh.transform import cumsum
 
 # -------------------------------
 # CONFIGURAÇÃO GERAL
 # -------------------------------
 st.set_page_config(
-    page_title="Simulador de Financiamento (Bokeh)",
+    page_title="Simulador de Financiamento (Plotly)",
     page_icon="🏦",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # -------------------------------
-# ESTILOS E CORES
+# ESTILOS E CORES (TEMA CLARO)
 # -------------------------------
 SANTANDER_RED = "#EC0000"
 PRIMARY_BLUE = "#004481"
 TEXT_COLOR = "#1f2937"
 SUBTLE_TEXT_COLOR = "#4b5563"
 BACKGROUND_COLOR = "#f0f2f6"
+COMPONENT_BACKGROUND = "#ffffff"
 BORDER_COLOR = "#d1d5db"
+INPUT_BORDER_COLOR = "#6c757d" # Cinza escuro para a borda dos inputs
 
 st.markdown(f"""
     <style>
@@ -56,9 +85,48 @@ st.markdown(f"""
         border: none; border-top: 3px solid {SANTANDER_RED};
         margin: 2rem 0;
     }}
-    [data-testid="stMetric"] {{ background-color: transparent; }}
-    [data-testid="stMetricLabel"] {{ font-size: 1rem; }}
-    [data-testid="stMetricValue"] {{ font-size: 2rem; }}
+    [data-testid="stMetric"] {{ background-color: {COMPONENT_BACKGROUND}; padding: 15px; border-radius: 8px; border: 1px solid {BORDER_COLOR}; }}
+    [data-testid="stMetricLabel"] {{ font-size: 1rem; color: {SUBTLE_TEXT_COLOR}; }}
+    [data-testid="stMetricValue"] {{ font-size: 2rem; color: {TEXT_COLOR}; }}
+    
+    /* Estilo para os inputs */
+    .stNumberInput, .stDateInput, .stRadio > div {{ /* stRadio precisa de > div */
+        background-color: {COMPONENT_BACKGROUND};
+        border-radius: 8px;
+        padding: 5px 10px;
+        border: 1px solid {INPUT_BORDER_COLOR}; /* Borda cinza escura */
+    }}
+    .stDateInput > label, .stNumberInput > label {{ /* Ajustar visibilidade de labels */
+        visibility: hidden; 
+        height: 0; 
+        margin: 0; 
+        padding: 0;
+    }}
+    /* Para labels do radio */
+    .stRadio > label {{
+        color: {SUBTLE_TEXT_COLOR};
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }}
+    /* Abas */
+    [data-testid="stTabs"] button {{
+        color: {SUBTLE_TEXT_COLOR};
+        font-weight: 500;
+    }}
+    [data-testid="stTabs"] button[aria-selected="true"] {{
+        color: {SANTANDER_RED};
+        font-weight: 600;
+        border-bottom: 2px solid {SANTANDER_RED};
+    }}
+    /* Tabelas */
+    .stDataFrame {{
+        border: 1px solid {BORDER_COLOR};
+        border-radius: 8px;
+    }}
+    /* Mensagens de info/warning */
+    .stAlert {{
+        border-radius: 8px;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -87,29 +155,30 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.title("Simulador de Financiamento (UI com Bokeh)")
+st.title("Simulador de Financiamento")
 
-param_col1, param_col2, param_col3 = st.columns(3)
-# (Seção de parâmetros inalterada)
-with param_col1:
-    st.markdown("<h5>💵 Valores do Imóvel</h5>", unsafe_allow_html=True)
-    valor_imovel = st.number_input("Valor Total (R$)", value=600000.0, format="%.2f", key="valor_imovel", min_value=0.0, label_visibility="collapsed")
-    min_entrada = valor_imovel * 0.20
-    entrada = st.number_input("Entrada (R$)", value=max(min_entrada, 120000.0), format="%.2f", key="entrada", min_value=0.0, label_visibility="collapsed")
-    st.caption(f"Entrada mínima (20%): R$ {min_entrada:,.2f}")
-with param_col2:
-    st.markdown("<h5>⚙️ Condições do Contrato</h5>", unsafe_allow_html=True)
-    taxa_juros = st.number_input("Taxa de Juros Anual (%)", value=10.5, format="%.2f", key="taxa", label_visibility="collapsed")
-    num_parcelas = st.number_input("Prazo (meses)", value=360, step=12, key="parcelas", label_visibility="collapsed")
-    data_inicio = st.date_input("Data de Início", value=datetime.now().date(), key="inicio", label_visibility="collapsed")
-with param_col3:
-    st.markdown("<h5>🚀 Amortização Extra</h5>", unsafe_allow_html=True)
-    amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=500.0, format="%.2f", key="extra", min_value=0.0, label_visibility="collapsed")
-    tipo_amortizacao = st.radio("Objetivo:", ("Reduzir prazo", "Reduzir parcela"), key="tipo_amortizacao", horizontal=True)
+# --- Seção de Parâmetros ---
+with st.container():
+    param_col1, param_col2, param_col3 = st.columns(3)
+    with param_col1:
+        st.markdown("<h5>💵 Valores do Imóvel</h5>", unsafe_allow_html=True)
+        valor_imovel = st.number_input("Valor Total (R$)", value=600000.0, format="%.2f", key="valor_imovel", min_value=0.0)
+        min_entrada = valor_imovel * 0.20
+        entrada = st.number_input("Entrada (R$)", value=max(min_entrada, 120000.0), format="%.2f", key="entrada", min_value=0.0)
+        if entrada < min_entrada: st.warning(f"Atenção: A entrada de R$ {entrada:,.2f} está abaixo do mínimo recomendado de R$ {min_entrada:,.2f}.")
+
+    with param_col2:
+        st.markdown("<h5>⚙️ Condições do Contrato</h5>", unsafe_allow_html=True)
+        taxa_juros = st.number_input("Taxa de Juros Anual (%)", value=10.5, format="%.2f", key="taxa")
+        num_parcelas = st.number_input("Prazo (meses)", value=360, step=12, key="parcelas")
+        data_inicio = st.date_input("Data de Início", value=datetime.now().date(), key="inicio")
+    with param_col3:
+        st.markdown("<h5>🚀 Amortização Extra</h5>", unsafe_allow_html=True)
+        amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=500.0, format="%.2f", key="extra", min_value=0.0)
+        tipo_amortizacao = st.radio("Objetivo:", ("Reduzir prazo", "Reduzir parcela"), key="tipo_amortizacao", horizontal=True)
 
 valor_financiado = valor_imovel - entrada
-if entrada < min_entrada: st.warning(f"Atenção: A entrada está abaixo do mínimo recomendado.")
-st.info(f"**Valor a ser Financiado:** R$ {valor_financiado:,.2f}")
+st.info(f"**Valor a ser Financiado:** R$ {valor_financiado:,.2f}  |  **Entrada:** R$ {entrada:,.2f}  |  **Prazo:** {int(num_parcelas)} meses")
 
 st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
 
@@ -122,25 +191,41 @@ if valor_financiado > 0:
         tipo = 'prazo' if tipo_amortizacao == "Reduzir prazo" else 'parcela'
         df_com_extra = calcular_financiamento(tipo, valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra)
 
-    def criar_grafico_pizza_bokeh(dataframe):
-        if dataframe.empty: return None
-        data = pd.DataFrame({'Componente': ['Principal', 'Juros', 'Taxas/Seguro'], 'Valor': [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]})
-        data['angle'] = data['Valor'] / data['Valor'].sum() * 2 * pi
-        data['color'] = [PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR]
-        data['percent'] = (data['Valor'] / data['Valor'].sum()) * 100
+    # Função para criar o gráfico de pizza com Plotly
+    def criar_grafico_pizza_plotly(dataframe):
+        if dataframe.empty: return go.Figure()
         
-        p = figure(height=500, title="", toolbar_location=None, tools="hover", tooltips="@Componente: @Valor{,0.00 a} (@percent{0.0}%)", x_range=(-0.6, 0.6), y_range=(-0.6, 0.6))
-        p.annular_wedge(x=0, y=0, inner_radius=0.15, outer_radius=0.4, direction="anticlock",
-                        start_angle=cumsum('angle', include_zero=True), end_angle=cumsum('angle'),
-                        line_color="white", fill_color='color', legend_field='Componente', source=data)
-        
-        # Estilo do gráfico
-        p.axis.axis_label = None; p.axis.visible = False; p.grid.grid_line_color = None
-        p.background_fill_color = None; p.border_fill_color = None; p.outline_line_color = None
-        p.legend.location = "center"; p.legend.background_fill_alpha = 0; p.legend.border_line_alpha = 0
-        p.legend.label_text_color = TEXT_COLOR
-        
-        return p
+        labels = ['Principal', 'Juros', 'Taxas/Seguro']
+        values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
+        colors = [PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR] # Cores ajustadas para o tema claro
+
+        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, 
+                                     marker_colors=colors, 
+                                     # Adiciona a borda branca de 2px
+                                     marker=dict(line=dict(color='white', width=2)), 
+                                     # Texto no centro do donut (opcional, mas comum)
+                                     # textinfo='percent+label',
+                                     hoverinfo='label+percent+value',
+                                     hovertemplate="<b>%{label}</b><br>Valor: R$ %{value:,.2f}<br>Percentual: %{percent}<extra></extra>"
+                                    )])
+
+        fig.update_layout(
+            height=500,
+            showlegend=True,
+            margin=dict(l=20, r=20, t=40, b=20),
+            paper_bgcolor='rgba(0,0,0,0)',  # Fundo transparente da figura
+            plot_bgcolor='rgba(0,0,0,0)',   # Fundo transparente da área de plotagem
+            font=dict(color=TEXT_COLOR), # Cor da fonte para o tema claro
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                font=dict(color=SUBTLE_TEXT_COLOR) # Cor da legenda
+            )
+        )
+        return fig
 
     st.header("Análise Comparativa")
     
@@ -149,16 +234,19 @@ if valor_financiado > 0:
         st.subheader("Cenário Padrão")
         if not df_sem_extra.empty:
             total_pagar, total_juros = df_sem_extra["Prestação_Total"].sum(), df_sem_extra["Juros"].sum()
-            st.metric("Custo Total", f"R$ {total_pagar:,.2f}"); st.metric("Total em Juros", f"R$ {total_juros:,.2f}"); st.metric("Prazo Final", f"{len(df_sem_extra)} meses")
-            st.bokeh_chart(criar_grafico_pizza_bokeh(df_sem_extra), use_container_width=True)
-            
+            st.metric("Custo Total", f"R$ {total_pagar:,.2f}")
+            st.metric("Total em Juros", f"R$ {total_juros:,.2f}")
+            st.metric("Prazo Final", f"{len(df_sem_extra)} meses")
+            st.plotly_chart(criar_grafico_pizza_plotly(df_sem_extra), use_container_width=True)
     with col_met_com:
         st.subheader("Cenário com Amortização Extra")
         if not df_com_extra.empty:
             total_pagar_extra, total_juros_extra = df_com_extra["Prestação_Total"].sum(), df_com_extra["Juros"].sum()
             economia = total_pagar - total_pagar_extra
-            st.metric("Custo Total", f"R$ {total_pagar_extra:,.2f}", f"- R$ {economia:,.2f}"); st.metric("Total em Juros", f"R$ {total_juros_extra:,.2f}"); st.metric("Prazo Final", f"{len(df_com_extra)} meses")
-            st.bokeh_chart(criar_grafico_pizza_bokeh(df_com_extra), use_container_width=True)
+            st.metric("Custo Total", f"R$ {total_pagar_extra:,.2f}", f"- R$ {economia:,.2f}")
+            st.metric("Total em Juros", f"R$ {total_juros_extra:,.2f}")
+            st.metric("Prazo Final", f"{len(df_com_extra)} meses")
+            st.plotly_chart(criar_grafico_pizza_plotly(df_com_extra), use_container_width=True)
         else:
             st.info("Nenhum cenário com amortização extra para comparar.")
 
@@ -172,42 +260,104 @@ if valor_financiado > 0:
     
     tab_saldo, tab_comp, tab_parcela, tab_tabela = st.tabs(["📉 Saldo Devedor", "📊 Composição Mensal", "📉 Evolução da Parcela", "📋 Tabela Detalhada"])
     
+    # Função para layouts comuns do Plotly
+    def get_common_plotly_layout(title="", y_title="", legend_title="", show_legend=True):
+        return go.Layout(
+            height=500,
+            title_text=title,
+            title_x=0.05, # Alinha o título um pouco para a esquerda
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            font=dict(color=TEXT_COLOR),
+            xaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR)),
+            yaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickformat=",.0f", tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR)),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+                title=legend_title,
+                font=dict(color=SUBTLE_TEXT_COLOR),
+                bgcolor='rgba(255,255,255,0.7)', # Fundo sutil para a legenda
+                bordercolor=BORDER_COLOR,
+                borderwidth=1
+            ) if show_legend else None,
+            margin=dict(l=20, r=20, t=50, b=20)
+        )
+
     with tab_saldo:
-        p = figure(height=500, x_axis_label="Meses", y_axis_label="Saldo Devedor (R$)", tooltips=[("Mês", "@Mês"), ("Saldo", "@Saldo_Devedor{,0.00 a}")])
-        source_p = ColumnDataSource(df_plot[df_plot['Cenário'] == 'Padrão'])
-        p.line(x='Mês', y='Saldo_Devedor', source=source_p, color=SUBTLE_TEXT_COLOR, legend_label="Padrão", width=2)
+        fig_saldo = go.Figure(layout=get_common_plotly_layout(y_title="Saldo Devedor (R$)", legend_title="Cenário"))
+        fig_saldo.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Saldo_Devedor'],
+                                       mode='lines', name='Padrão',
+                                       line=dict(color=SUBTLE_TEXT_COLOR, width=2)))
         if not df_com_extra.empty:
-            source_c = ColumnDataSource(df_plot[df_plot['Cenário'] == 'Com Amortização'])
-            p.line(x='Mês', y='Saldo_Devedor', source=source_c, color=SANTANDER_RED, legend_label="Com Amortização", width=2)
-        p.grid.visible = False; p.background_fill_alpha = 0; p.border_fill_alpha = 0; p.outline_line_color = None; p.yaxis.formatter = NumeralTickFormatter(format="0,0 a")
-        p.legend.location = "top_center"; p.legend.orientation = "horizontal"; p.legend.background_fill_alpha = 0; p.legend.border_line_alpha = 0; p.legend.label_text_color = TEXT_COLOR
-        st.bokeh_chart(p, use_container_width=True)
+            fig_saldo.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Saldo_Devedor'],
+                                           mode='lines', name='Com Amortização',
+                                           line=dict(color=SANTANDER_RED, width=2)))
+        fig_saldo.update_yaxes(tickformat=",.2f") # Formato de moeda para Y
+        st.plotly_chart(fig_saldo, use_container_width=True)
         
     with tab_comp:
-        source = ColumnDataSource(df_plot[df_plot['Mês'] <= 72])
-        p = figure(height=500, x_range=source.data['Mês'].unique().astype(str), x_axis_label="Meses (primeiros 6 anos)", y_axis_label="Valor da Parcela (R$)", tooltips=[("Mês", "@Mês"),("Componente","$name"),("Valor", "@$name{,0.00 a}")])
-        p.vbar_stack(stackers=['Juros', 'Amortização'], x='Mês', source=source, color=[SANTANDER_RED, PRIMARY_BLUE], legend_label=['Juros', 'Amortização'], width=0.9)
-        p.grid.visible = False; p.background_fill_alpha = 0; p.border_fill_alpha = 0; p.outline_line_color = None; p.yaxis.formatter = NumeralTickFormatter(format="0,0 a")
-        p.legend.location = "top_center"; p.legend.orientation = "horizontal"; p.legend.background_fill_alpha = 0; p.legend.border_line_alpha = 0; p.legend.label_text_color = TEXT_COLOR
-        st.bokeh_chart(p, use_container_width=True)
+        df_melted_comp = df_plot[df_plot['Mês'] <= 72].melt(id_vars=['Mês', 'Cenário'], value_vars=['Juros', 'Amortização'], var_name='Componente', value_name='Valor')
+        fig_comp = go.Figure()
+        
+        cenarios = ['Padrão', 'Com Amortização']
+        componentes = ['Juros', 'Amortização']
+        colors = {
+            'Juros': SANTANDER_RED,
+            'Amortização': PRIMARY_BLUE
+        }
+        
+        for cenario in cenarios:
+            for comp in componentes:
+                df_filtered = df_melted_comp[(df_melted_comp['Cenário'] == cenario) & (df_melted_comp['Componente'] == comp)]
+                fig_comp.add_trace(go.Bar(
+                    x=df_filtered['Mês'],
+                    y=df_filtered['Valor'],
+                    name=f'{comp} ({cenario})',
+                    marker_color=colors[comp],
+                    opacity=0.8,
+                    showlegend=True
+                ))
+        
+        fig_comp.update_layout(
+            barmode='stack',
+            xaxis_title="Meses (primeiros 6 anos)",
+            yaxis_title="Valor da Parcela (R$)",
+            **get_common_plotly_layout(y_title="Valor da Parcela (R$)", legend_title="Cenário / Componente").to_dict()
+        )
+        fig_comp.update_yaxes(tickformat=",.2f") # Formato de moeda para Y
+        st.plotly_chart(fig_comp, use_container_width=True)
 
     with tab_parcela:
-        p = figure(height=500, x_axis_label="Meses", y_axis_label="Valor (R$)", tooltips=[("Mês", "@Mês"),("Variável", "$name"),("Valor", "@$y{,0.00 a}")])
+        fig_parcela = go.Figure(layout=get_common_plotly_layout(y_title="Valor (R$)", legend_title="Variável / Cenário"))
+        
         if not df_sem_extra.empty:
-            source_p = ColumnDataSource(df_sem_extra)
-            p.line(x='Mês', y='Prestação_Total', source=source_p, color=SANTANDER_RED, legend_label="Total da Parcela (Padrão)", width=2.5)
-            p.line(x='Mês', y='Amortização', source=source_p, color=PRIMARY_BLUE, legend_label="Amortização (Padrão)", width=2)
-            p.line(x='Mês', y='Juros', source=source_p, color=SUBTLE_TEXT_COLOR, legend_label="Juros (Padrão)", width=2)
+            fig_parcela.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Prestação_Total'],
+                                             mode='lines', name='Total (Padrão)',
+                                             line=dict(color=SANTANDER_RED, width=2.5)))
+            fig_parcela.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Amortização'],
+                                             mode='lines', name='Amortização (Padrão)',
+                                             line=dict(color=PRIMARY_BLUE, width=2)))
+            fig_parcela.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Juros'],
+                                             mode='lines', name='Juros (Padrão)',
+                                             line=dict(color=SUBTLE_TEXT_COLOR, width=2)))
         if not df_com_extra.empty:
-            source_c = ColumnDataSource(df_com_extra)
-            p.line(x='Mês', y='Prestação_Total', source=source_c, color=SANTANDER_RED, legend_label="Total da Parcela (Com Amort.)", width=2.5, line_dash='dashed')
-            p.line(x='Mês', y='Amortização', source=source_c, color=PRIMARY_BLUE, legend_label="Amortização (Com Amort.)", width=2, line_dash='dashed')
-            p.line(x='Mês', y='Juros', source=source_c, color=SUBTLE_TEXT_COLOR, legend_label="Juros (Com Amort.)", width=2, line_dash='dashed')
-        p.grid.visible = False; p.background_fill_alpha = 0; p.border_fill_alpha = 0; p.outline_line_color = None; p.yaxis.formatter = NumeralTickFormatter(format="0,0 a")
-        p.legend.location = "top_center"; p.legend.orientation = "horizontal"; p.legend.background_fill_alpha = 0; p.legend.border_line_alpha = 0; p.legend.label_text_color = TEXT_COLOR; p.legend.click_policy="hide"
-        st.bokeh_chart(p, use_container_width=True)
+            fig_parcela.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Prestação_Total'],
+                                             mode='lines', name='Total (Com Amort.)',
+                                             line=dict(color=SANTANDER_RED, width=2.5, dash='dash')))
+            fig_parcela.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Amortização'],
+                                             mode='lines', name='Amortização (Com Amort.)',
+                                             line=dict(color=PRIMARY_BLUE, width=2, dash='dash')))
+            fig_parcela.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Juros'],
+                                             mode='lines', name='Juros (Com Amort.)',
+                                             line=dict(color=SUBTLE_TEXT_COLOR, width=2, dash='dash')))
+        fig_parcela.update_yaxes(tickformat=",.2f") # Formato de moeda para Y
+        st.plotly_chart(fig_parcela, use_container_width=True)
 
     with tab_tabela:
+        st.header("Tabela de Amortização Completa")
         if not df_com_extra.empty:
             st.subheader("Cenário com Amortização Extra")
             st.dataframe(df_com_extra, use_container_width=True, height=500)
@@ -218,3 +368,4 @@ else:
 
 st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
 st.caption("Aviso Legal: Esta é uma ferramenta de simulação e os resultados são para fins ilustrativos.")
+```
