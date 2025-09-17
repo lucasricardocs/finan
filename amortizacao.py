@@ -274,16 +274,6 @@ st.markdown(f"""
     .stColumn > div {{
         padding: 0 0.75rem;
     }}
-    
-    /* Info box styling */
-    .stInfo {
-        background: linear-gradient(135deg, #e3f2fd 0%, rgba(13, 110, 253, 0.1) 100%);
-        border: 1px solid #0d6efd;
-        border-radius: 12px;
-    }
-    
-    </style>
-    """, unsafe_allow_html=True)
 
 # -------------------------------
 # FUNÇÃO AUXILIAR PARA CRIAR CONTAINERS ESTILIZADOS
