@@ -1,4 +1,3 @@
-# simulador_financiamento_final_corrigido.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -274,6 +273,25 @@ st.markdown(f"""
     .stColumn > div {{
         padding: 0 0.75rem;
     }}
+    
+    /* Styling para separadores markdown */
+    hr {{
+        border: none;
+        height: 2px;
+        background: {PRIMARY_BLUE};
+        margin: 2rem 0;
+        border-radius: 2px;
+    }}
+    
+    /* Info box styling */
+    .stInfo {{
+        background: {LIGHT_BLUE};
+        border: 1px solid {PRIMARY_BLUE};
+        border-radius: 12px;
+    }}
+    
+    </style>
+    """, unsafe_allow_html=True)
 
 # -------------------------------
 # FUNÇÃO AUXILIAR PARA CRIAR CONTAINERS ESTILIZADOS
