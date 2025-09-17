@@ -303,14 +303,6 @@ st.markdown(f"""
     """, unsafe_allow_html=True)
 
 # -------------------------------
-# FUNÇÃO AUXILIAR PARA CRIAR CONTAINERS ESTILIZADOS
-@contextmanager
-def styled_container(class_name: str):
-    st.markdown(f"<div class='{class_name}'>", unsafe_allow_html=True)
-    yield
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# -------------------------------
 # FUNÇÕES DE CÁLCULO
 # -------------------------------
 @st.cache_data
