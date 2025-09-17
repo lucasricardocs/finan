@@ -65,17 +65,28 @@ st.markdown(f"""
         border-radius: 12px 12px 0 0;
     }}
     
-    /* Esconde o ícone quebrado original do Streamlit */
-    [data-testid="stExpander"] summary .st-emotion-cache-1282ie9, 
-    [data-testid="stExpander"] summary .st-emotion-cache-g85b5l {{
-        display: none;
+    /* Esconde todos os ícones padrão do Streamlit */
+    [data-testid="stExpander"] summary svg {{
+        display: none !important;
     }}
     
-    /* Cria nosso próprio ícone de seta (▶) */
+    [data-testid="stExpander"] summary span[data-testid] {{
+        display: none !important;
+    }}
+    
+    /* Remove classes específicas que causam problemas */
+    [data-testid="stExpander"] summary .st-emotion-cache-1282ie9,
+    [data-testid="stExpander"] summary .st-emotion-cache-g85b5l,
+    [data-testid="stExpander"] summary [class*="st-emotion-cache"],
+    [data-testid="stExpander"] summary [class*="keyboard_arrow"] {{
+        display: none !important;
+        visibility: hidden !important;
+    }}
+    
+    /* Cria nosso próprio ícone */
     [data-testid="stExpander"] summary::before {{
-        content: '⚙️';
+        content: '⚙️ ';
         font-size: 18px;
-        margin-right: 12px;
     }}
     
     [data-testid="stExpander"] summary::after {{
@@ -357,7 +368,8 @@ def criar_grafico_pizza(dataframe):
     return fig
 
 def criar_grafico_barras(dataframe):
-    if dataframe.empty: return go.Figure()
+    if dataframe.empty: 
+        return go.Figure()
     
     # Filtrando para mostrar de 5 em 5 anos (60 meses)
     max_mes = min(len(dataframe), 180)  # Máximo de 15 anos para visualização
@@ -367,6 +379,9 @@ def criar_grafico_barras(dataframe):
         meses_selecionados.insert(0, 1)  # Sempre incluir o primeiro mês
     
     df_view = dataframe[dataframe['Mês'].isin(meses_selecionados)]
+    
+    if df_view.empty:
+        return go.Figure()
     
     fig = go.Figure()
     fig.add_trace(go.Bar(
@@ -393,7 +408,7 @@ def criar_grafico_barras(dataframe):
     
     fig.update_layout(
         barmode='stack', 
-        height=450,  # Aumentado de 300 para 450
+        height=450,
         legend=dict(
             orientation="h", 
             yanchor="bottom", 
@@ -407,19 +422,17 @@ def criar_grafico_barras(dataframe):
         margin=dict(l=20, r=20, t=60, b=20), 
         xaxis=dict(
             showgrid=False, 
-            title='Período',
-            titlefont=dict(size=14)
+            title='Período'
         ), 
         yaxis=dict(
             showgrid=True, 
             gridcolor='rgba(0,0,0,0.1)',
-            title='Valor (R$)',
-            titlefont=dict(size=14)
+            title='Valor (R$)'
         ),
         title=dict(
             text="Evolução das Parcelas (5 em 5 anos)",
             x=0.5,
-            font=dict(size=16, color=TEXT_COLOR)
+            font=dict(size=16)
         )
     )
     return fig
@@ -493,7 +506,7 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 st.title("🏦 Simulação de Financiamento")
 
-with st.expander("Configurar Parâmetros da Simulação", expanded=False):
+with st.expander("Configurar Parâmetros da Simulação", expanded=True):
     col1, col2, col3 = st.columns(3)
     with col1:
         valor_imovel_input = st.number_input("💰 Valor do Imóvel", value=625000.0, format="%.2f")
