@@ -122,7 +122,7 @@ st.markdown(f"""
         top: 0;
         left: 0;
         right: 0;
-        height: 4px;
+        height: 1px;
         background: linear-gradient(90deg, {PRIMARY_BLUE} 0%, {SUCCESS_GREEN} 50%, {SANTANDER_RED} 100%);
     }}
     
