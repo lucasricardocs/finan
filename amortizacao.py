@@ -1,4 +1,9 @@
-# simulador_financiamento_final_corrigido.py
+/* Info box styling */
+    .stInfo {{
+        background: linear-gradient(135deg, {LIGHT_BLUE} 0%, rgba(13, 110, 253, 0.1) 100%);
+        border: 1px solid {PRIMARY_BLUE};
+        border-radius: 12px;
+    }}# simulador_financiamento_final_corrigido.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -275,11 +280,13 @@ st.markdown(f"""
         padding: 0 0.75rem;
     }}
     
-    /* Info box styling */
-    .stInfo {{
-        background: linear-gradient(135deg, {LIGHT_BLUE} 0%, rgba(13, 110, 253, 0.1) 100%);
-        border: 1px solid {PRIMARY_BLUE};
-        border-radius: 12px;
+    /* Styling para separadores markdown */
+    hr {{
+        border: none;
+        height: 2px;
+        background: linear-gradient(90deg, transparent 0%, {PRIMARY_BLUE} 20%, {SANTANDER_RED} 80%, transparent 100%);
+        margin: 2rem 0;
+        border-radius: 2px;
     }}
     
     </style>
@@ -357,7 +364,8 @@ def criar_grafico_barras(dataframe):
     if dataframe.empty: 
         return go.Figure()
     
-    df_view = dataframe[dataframe['Mês'] <= 36]
+    # Usar todos os dados do dataframe (quantos meses foram inseridos)
+    df_view = dataframe.copy()
     
     if df_view.empty:
         return go.Figure()
@@ -374,7 +382,7 @@ def criar_grafico_barras(dataframe):
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=20, b=20), 
-        xaxis=dict(showgrid=False, title=''), 
+        xaxis=dict(showgrid=False, title='Meses'), 
         yaxis=dict(showgrid=False, title='')
     )
     return fig
@@ -383,7 +391,8 @@ def criar_grafico_linha(dataframe):
     if dataframe.empty: 
         return go.Figure()
     
-    df_view = dataframe[dataframe['Mês'] <= 36]
+    # Usar todos os dados do dataframe (quantos meses foram inseridos)
+    df_view = dataframe.copy()
     
     if df_view.empty:
         return go.Figure()
@@ -398,7 +407,7 @@ def criar_grafico_linha(dataframe):
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=20, b=20), 
-        xaxis=dict(showgrid=False, title=''), 
+        xaxis=dict(showgrid=False, title='Meses'), 
         yaxis=dict(showgrid=False, title='')
     )
     return fig
@@ -485,7 +494,7 @@ if 'simular' in st.session_state and st.session_state.simular:
             if not df_sem_extra.empty:
                 st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
                 st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
-                st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
+                st.markdown("---")
                 st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
                 st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
 
@@ -495,7 +504,7 @@ if 'simular' in st.session_state and st.session_state.simular:
             if not df_com_extra.empty:
                 st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
                 st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
-                st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
+                st.markdown("---")
                 st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
                 st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
             else:
