@@ -64,7 +64,9 @@ st.markdown("""
         height: 300px;
         width: 300px;
         object-fit: contain;
-        flex-shrink: 0;
+        grid-column: 1;
+        justify-self: end;
+        margin-right: 2rem;
     }
     
     .title-text-container {
@@ -72,8 +74,9 @@ st.markdown("""
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        flex: 1;
         text-align: center;
+        grid-column: 2;
+        justify-self: center;
     }
     
     .main-title {
@@ -209,7 +212,6 @@ st.markdown("""
     /* Somente efeito hover, sem animação */
     .metric-row:hover {
         background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 8px;
     }
     
     .metric-label {
