@@ -1,4 +1,3 @@
-
 # simulador_financiamento_plotly_ui.py
 import streamlit as st
 import pandas as pd
@@ -337,4 +336,3 @@ else:
 
 st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
 st.caption("Aviso Legal: Esta é uma ferramenta de simulação e os resultados são para fins ilustrativos.")
-```
