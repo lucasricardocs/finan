@@ -51,7 +51,7 @@ st.markdown("""
         flex-direction: row; /* Mudado para row para posicionar logo à esquerda */
         align-items: center;
         justify-content: center;
-        gap: 2rem; /* Aumentado o gap entre logo e texto */
+        gap: 0.2rem; /* Aumentado o gap entre logo e texto */
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
         height: 450px; /* Altura fixa conforme solicitado */
     }
