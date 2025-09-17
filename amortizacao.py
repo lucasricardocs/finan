@@ -40,7 +40,7 @@ st.markdown("""
     
     /* Container animado para o título */
     .title-container {
-        border: 2px solid "black";
+        border: 2px solid "#ffffff";
         border-radius: 20px; /* Bordas mais arredondadas */
         padding: 2rem; /* Aumentado o padding */
         margin: 5rem auto; /* Aumentado a margem */
@@ -53,7 +53,7 @@ st.markdown("""
         justify-content: center;
         gap: 0.002rem; /* Aumentado o gap entre logo e texto */
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-        height: 450px; /* Altura fixa conforme solicitado */
+        height: 300px; /* Altura fixa conforme solicitado */
     }
     .title-container:hover {
         transform: translateY(-8px) scale(1.02); /* Efeito de escala no hover */
@@ -62,8 +62,8 @@ st.markdown("""
     }
     
     .title-logo {
-        height: 350px; /* Altura compatível com container de 450px */
-        width: 350px; /* Largura proporcional */
+        height: 300px; /* Altura compatível com container de 450px */
+        width: 300px; /* Largura proporcional */
         object-fit: contain;
         flex-shrink: 0; /* Impede que o logo encolha */
     }
@@ -80,7 +80,7 @@ st.markdown("""
     .main-title {
         font-size: 10rem; /* Aumentado significativamente o tamanho */
         font-weight: 700;
-        color: #0d6efd;
+        color: #dedtdq;
         margin: 0;
         font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         letter-spacing: 0.5px;
