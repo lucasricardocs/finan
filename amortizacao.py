@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
-from contextlib import contextmanager
 
 # -------------------------------
 # CONFIGURAÇÃO GERAL
@@ -27,280 +26,70 @@ def format_currency(value):
         return "R$ 0,00"
 
 # -------------------------------
-# ESTILOS E CORES (SIMPLIFICADOS)
+# ESTILOS SIMPLIFICADOS
 # -------------------------------
-PRIMARY_BLUE = "#0d6efd"
-SANTANDER_RED = "#EC0000"
-SUCCESS_GREEN = "#198754"
-TEXT_COLOR = "#212529"
-SUBTLE_TEXT_COLOR = "#6c757d"
-BACKGROUND_COLOR = "#f8f9fa"
-BORDER_COLOR = "#dee2e6"
-COMPONENT_BACKGROUND = "#ffffff"
-LIGHT_BLUE = "#e3f2fd"
-SHADOW_COLOR = "rgba(0,0,0,0.08)"
-
-st.markdown(f"""
+st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    
-    html, body, [class*="st-"] {{
-        font-family: 'Inter', sans-serif;
-    }}
-    
-    .stApp {{
-        background: {BACKGROUND_COLOR};
-        color: {TEXT_COLOR};
-    }}
-    
-    /* --- CORREÇÃO DO ÍCONE DO EXPANSÍVEL --- */
-    [data-testid="stExpander"] {{
-        border: 1px solid {BORDER_COLOR};
-        border-radius: 12px;
-        box-shadow: 0 2px 8px {SHADOW_COLOR};
-        background: {COMPONENT_BACKGROUND};
-        margin-bottom: 1.5rem;
-    }}
-    
-    [data-testid="stExpander"] summary {{
-        position: relative;
-        padding: 1.5rem 2rem;
-        background: {PRIMARY_BLUE};
-        color: white;
-        font-weight: 600;
-        font-size: 1.1rem;
-        border-radius: 12px 12px 0 0;
-        margin: -1px -1px 0 -1px;
-    }}
-    
-    [data-testid="stExpander"][open] > summary {{
-        border-radius: 12px 12px 0 0;
-    }}
-    
-    /* Esconde todos os ícones padrão do Streamlit */
-    [data-testid="stExpander"] summary svg {{
-        display: none !important;
-    }}
-    
-    [data-testid="stExpander"] summary span[data-testid] {{
-        display: none !important;
-    }}
-    
-    /* Remove classes específicas que causam problemas */
-    [data-testid="stExpander"] summary .st-emotion-cache-1282ie9,
-    [data-testid="stExpander"] summary .st-emotion-cache-g85b5l,
-    [data-testid="stExpander"] summary [class*="st-emotion-cache"],
-    [data-testid="stExpander"] summary [class*="keyboard_arrow"] {{
-        display: none !important;
-        visibility: hidden !important;
-    }}
-    
-    /* Cria nosso próprio ícone */
-    [data-testid="stExpander"] summary::before {{
-        content: '⚙️ ';
-        font-size: 18px;
-    }}
-    
-    [data-testid="stExpander"] summary::after {{
-        content: '▼';
-        font-size: 16px;
-        position: absolute;
-        right: 1.5rem;
-        top: 50%;
-        transform: translateY(-50%) rotate(-90deg);
-        transition: transform 0.3s ease;
-    }}
-    
-    [data-testid="stExpander"][open] > summary::after {{
-        transform: translateY(-50%) rotate(0deg);
-    }}
-
-    /* --- Contêineres (Cards) --- */
-    .card {{
-        background: {COMPONENT_BACKGROUND};
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 8px 32px {SHADOW_COLOR};
-        margin-bottom: 2rem;
-        height: 100%;
-        border: 1px solid {BORDER_COLOR};
-        position: relative;
-        overflow: hidden;
-    }}
-    
-    .card::before {{
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 4px;
-        background: {PRIMARY_BLUE};
-    }}
-    
-    .card-title {{
-        font-size: 1.4rem;
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    .main-title {
+        font-size: 2.5rem;
         font-weight: 700;
-        color: {TEXT_COLOR};
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid {LIGHT_BLUE};
-        position: relative;
-    }}
-    
-    .card-title::after {{
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        width: 60px;
-        height: 2px;
-        background: {PRIMARY_BLUE};
-    }}
-    
-    .param-grid {{
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 1.5rem;
-        margin-top: 1rem;
-    }}
-    
-    .param-box {{
-        padding: 1.5rem;
-        border: 1px solid {BORDER_COLOR};
-        border-radius: 12px;
+        color: #0d6efd;
         text-align: center;
-        background: {COMPONENT_BACKGROUND};
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 16px rgba(13, 110, 253, 0.1);
-    }}
-    
-    .param-box:hover {{
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(13, 110, 253, 0.15);
-    }}
-    
-    .param-label {{
+        margin-bottom: 2rem;
+    }
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #212529;
+        margin-bottom: 1rem;
+    }
+    .param-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .param-box {
+        padding: 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        text-align: center;
+        background-color: white;
+    }
+    .param-label {
         font-size: 0.9rem;
-        color: {SUBTLE_TEXT_COLOR};
-        font-weight: 500;
+        color: #6c757d;
         margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }}
-    
-    .param-value {{
-        font-size: 1.2rem;
+    }
+    .param-value {
+        font-size: 1.1rem;
         font-weight: 700;
-        color: {PRIMARY_BLUE};
-        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }}
-    
-    .metric-table {{
+        color: #0d6efd;
+    }
+    .metric-table {
         width: 100%;
         margin-bottom: 2rem;
-        background: {LIGHT_BLUE};
-        border-radius: 12px;
-        padding: 1.5rem;
-    }}
-    
-    .metric-row {{
+    }
+    .metric-row {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        padding: 1rem 0;
-        border-bottom: 1px solid rgba(13, 110, 253, 0.1);
-        transition: background-color 0.2s ease;
-    }}
-    
-    .metric-row:hover {{
-        background-color: rgba(13, 110, 253, 0.05);
-        border-radius: 8px;
-        margin: 0 -0.5rem;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
-    }}
-    
-    .metric-row:last-child {{
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+    .metric-row:last-child {
         border-bottom: none;
-    }}
-    
-    .metric-label {{
-        color: {SUBTLE_TEXT_COLOR};
-        font-size: 0.95rem;
-        font-weight: 500;
-    }}
-    
-    .metric-value {{
-        font-weight: 700;
-        color: {TEXT_COLOR};
-        font-size: 1rem;
-    }}
-    
-    /* Melhorando inputs do Streamlit */
-    .stNumberInput > div > div > input {{
-        border-radius: 8px;
-        border: 2px solid {BORDER_COLOR};
-        padding: 12px 16px;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-    }}
-    
-    .stNumberInput > div > div > input:focus {{
-        border-color: {PRIMARY_BLUE};
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-    }}
-    
-    .stDateInput > div > div > input {{
-        border-radius: 8px;
-        border: 2px solid {BORDER_COLOR};
-        padding: 12px 16px;
-        transition: all 0.3s ease;
-    }}
-    
-    .stDateInput > div > div > input:focus {{
-        border-color: {PRIMARY_BLUE};
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
-    }}
-    
-    .stRadio > div {{
-        background: {LIGHT_BLUE};
-        border-radius: 12px;
-        padding: 1rem;
-    }}
-    
-    /* Título principal */
-    h1 {{
-        color: {PRIMARY_BLUE};
-        text-align: center;
-        font-weight: 800;
-        font-size: 2.5rem;
-        margin-bottom: 2rem;
-    }}
-    
-    /* Melhorando as colunas */
-    .stColumn > div {{
-        padding: 0 0.75rem;
-    }}
-    
-    /* Styling para separadores markdown */
-    hr {{
-        border: none;
-        height: 2px;
-        background: {PRIMARY_BLUE};
-        margin: 2rem 0;
-        border-radius: 2px;
-    }}
-    
-    /* Info box styling */
-    .stInfo {{
-        background: {LIGHT_BLUE};
-        border: 1px solid {PRIMARY_BLUE};
-        border-radius: 12px;
-    }}
-    
+    }
+    .metric-label {
+        color: #6c757d;
+    }
+    .metric-value {
+        font-weight: 600;
+    }
     </style>
-    """, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 # -------------------------------
 # FUNÇÕES DE CÁLCULO
@@ -325,40 +114,26 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
     return pd.DataFrame(dados)
 
 # -------------------------------
-# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS (PLOTLY) - COM ALTURA AUMENTADA
+# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS
 # -------------------------------
 def criar_grafico_pizza(dataframe):
     if dataframe.empty: return go.Figure()
     
     labels = ['Principal', 'Juros', 'Taxas/Seguro']
     values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
-    colors = [PRIMARY_BLUE, SANTANDER_RED, '#aaaaaa']
+    colors = ['#0d6efd', '#EC0000', '#6c757d']
     
     fig = go.Figure(data=[go.Pie(
         labels=labels, 
         values=values, 
         hole=.5, 
-        marker=dict(
-            colors=colors,
-            line=dict(color='white', width=2)
-        ),
-        hovertemplate="<b>%{label}</b><br>%{value:,.2f} reais<br>%{percent}<extra></extra>",
-        textinfo='label+percent',
-        texttemplate='<b>%{label}</b><br>%{percent}',
-        insidetextorientation='radial'
+        marker=dict(colors=colors),
+        hovertemplate="<b>%{label}</b><br>%{value:,.2f} reais<br>%{percent}<extra></extra>"
     )])
     
     fig.update_layout(
-        height=450,  # Aumentado de 300 para 450
+        height=400,
         showlegend=True, 
-        legend=dict(
-            orientation="h", 
-            yanchor="bottom", 
-            y=1.02, 
-            xanchor="center", 
-            x=0.5,
-            font=dict(size=12)
-        ), 
         margin=dict(l=20, r=20, t=20, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)'
@@ -366,69 +141,51 @@ def criar_grafico_pizza(dataframe):
     return fig
 
 def criar_grafico_barras(dataframe):
-    if dataframe.empty: 
-        return go.Figure()
-    
-    # Usar todos os dados do dataframe (quantos meses foram inseridos)
-    df_view = dataframe.copy()
-    
-    if df_view.empty:
-        return go.Figure()
+    if dataframe.empty: return go.Figure()
     
     fig = go.Figure()
-    fig.add_trace(go.Bar(name='Amortização', x=df_view['Mês'], y=df_view['Amortização'], marker_color=PRIMARY_BLUE,
+    fig.add_trace(go.Bar(name='Amortização', x=dataframe['Mês'], y=dataframe['Amortização'], marker_color='#0d6efd',
                          hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
-    fig.add_trace(go.Bar(name='Juros', x=df_view['Mês'], y=df_view['Juros'], marker_color=SANTANDER_RED,
+    fig.add_trace(go.Bar(name='Juros', x=dataframe['Mês'], y=dataframe['Juros'], marker_color='#EC0000',
                          hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'))
-    fig.add_trace(go.Bar(name='Taxas/Seguro', x=df_view['Mês'], y=df_view['Taxas/Seguro'], marker_color='#aaaaaa',
+    fig.add_trace(go.Bar(name='Taxas/Seguro', x=dataframe['Mês'], y=dataframe['Taxas/Seguro'], marker_color='#6c757d',
                          hovertemplate='<b>Mês %{x}</b><br>Taxas/Seguro: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
         barmode='stack', 
-        height=450,  # Aumentado de 300 para 450
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), 
+        height=400,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=20, b=20), 
-        xaxis=dict(showgrid=False, title='Meses'), 
-        yaxis=dict(showgrid=False, title=''),
+        xaxis=dict(title='Meses'), 
+        yaxis=dict(title='Valor (R$)'),
         hovermode='x unified'
     )
     
-    # Formatar eixo Y para mostrar valores em reais
     fig.update_yaxes(tickprefix='R$ ', tickformat=',.2f')
     
     return fig
 
 def criar_grafico_linha(dataframe):
-    if dataframe.empty: 
-        return go.Figure()
-    
-    # Usar todos os dados do dataframe (quantos meses foram inseridos)
-    df_view = dataframe.copy()
-    
-    if df_view.empty:
-        return go.Figure()
+    if dataframe.empty: return go.Figure()
     
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Prestação_Total'], name='Parcela', mode='lines', 
-                             line=dict(color=PRIMARY_BLUE, width=2.5),
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Prestação_Total'], name='Parcela', mode='lines', 
+                             line=dict(color='#0d6efd', width=2.5),
                              hovertemplate='<b>Mês %{x}</b><br>Parcela: R$ %{y:,.2f}<extra></extra>'))
-    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização mensal', mode='lines', 
-                             line=dict(color=SANTANDER_RED, width=2.5),
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Amortização'], name='Amortização', mode='lines', 
+                             line=dict(color='#EC0000', width=2.5),
                              hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
-        height=450,  # Aumentado de 300 para 450
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), 
-        paper_bgcolor='rgada(0,0,0,0)', 
+        height=400,
+        paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=20, b=20), 
-        xaxis=dict(showgrid=False, title='Meses'), 
-        yaxis=dict(showgrid=False, title='')
+        xaxis=dict(title='Meses'), 
+        yaxis=dict(title='Valor (R$)')
     )
     
-    # Formatar eixo Y para mostrar valores em reais
     fig.update_yaxes(tickprefix='R$ ', tickformat=',.2f')
     
     return fig
@@ -436,8 +193,9 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.title("🏦 Simulação de Financiamento")
+st.markdown('<p class="main-title">🏦 Simulação de Financiamento</p>', unsafe_allow_html=True)
 
+# Seção de parâmetros
 with st.expander("Configurar Parâmetros da Simulação", expanded=True):
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -451,14 +209,10 @@ with st.expander("Configurar Parâmetros da Simulação", expanded=True):
         amortizacao_extra = st.number_input("💪 Valor Extra Mensal (R$)", value=500.0, format="%.2f")
         tipo_amortizacao = st.radio("🎯 Objetivo da Amortização:", ("Reduzir prazo", "Reduzir parcela"), horizontal=True)
 
-    # Botão para executar simulação
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_btn1, col_btn2, col_btn3 = st.columns([1, 2, 1])
-    with col_btn2:
-        if st.button("🚀 **SIMULAR FINANCIAMENTO**", type="primary", use_container_width=True):
-            st.session_state.simular = True
+    if st.button("🚀 **SIMULAR FINANCIAMENTO**", type="primary", use_container_width=True):
+        st.session_state.simular = True
 
-# --- Cálculos (só executa após clicar no botão) ---
+# Cálculos
 if 'simular' in st.session_state and st.session_state.simular:
     valor_financiado_input = valor_imovel_input - entrada_input
     prazo_meses, taxa_juros_mes = int(num_parcelas_input), (1 + taxa_juros_input / 100) ** (1/12) - 1
@@ -472,27 +226,28 @@ else:
     df_com_extra = pd.DataFrame()
     valor_financiado_input = valor_imovel_input - entrada_input
 
-# --- Seção de Display dos Parâmetros ---
-with styled_container("card"):
-    st.markdown("<p class='card-title'>📊 Parâmetros de Financiamento</p>", unsafe_allow_html=True)
-    st.markdown("<div class='param-grid'>"
-                f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>{format_currency(valor_financiado_input)}</p></div>"
-                f"<div class='param-box'><p class='param-label'>Início</p><p class='param-value'>{data_inicio_input.strftime('%B de %Y')}</p></div>"
-                f"<div class='param-box'><p class='param-label'>Tabela</p><p class='param-value'>SAC</p></div>"
-                f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f}%</p></div>"
-                f"<div class='param-box'><p class='param-label'>Juros</p><p class='param-value'>a.a</p></div>"
-                f"<div class='param-box'><p class='param-label'>Nº de parcelas</p><p class='param-value'>{num_parcelas_input}</p></div>"
-                "</div>", unsafe_allow_html=True)
+# Seção de parâmetros de financiamento
+st.markdown('<p class="section-title">📊 Parâmetros de Financiamento</p>', unsafe_allow_html=True)
+st.markdown(f"""
+<div class="param-grid">
+    <div class="param-box"><p class="param-label">Empréstimo</p><p class="param-value">{format_currency(valor_financiado_input)}</p></div>
+    <div class="param-box"><p class="param-label">Início</p><p class="param-value">{data_inicio_input.strftime('%B de %Y')}</p></div>
+    <div class="param-box"><p class="param-label">Tabela</p><p class="param-value">SAC</p></div>
+    <div class="param-box"><p class="param-label">Taxa de juros</p><p class="param-value">{taxa_juros_input:.2f}%</p></div>
+    <div class="param-box"><p class="param-label">Juros</p><p class="param-value">a.a</p></div>
+    <div class="param-box"><p class="param-label">Nº de parcelas</p><p class="param-value">{num_parcelas_input}</p></div>
+</div>
+""", unsafe_allow_html=True)
 
-# --- Seção de Resultados ---
+st.divider()
+
+# Seção de resultados
 if 'simular' in st.session_state and st.session_state.simular:
     col_sem, col_com = st.columns(2)
 
     def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
         total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
         data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
-        
-        # Calcular total amortizado (deve ser igual ao valor financiado)
         total_amortizado = dataframe["Amortização"].sum()
         
         dados = [
@@ -501,9 +256,8 @@ if 'simular' in st.session_state and st.session_state.simular:
             ("Total amortizado", format_currency(total_amortizado)),
             ("Total de juros", format_currency(total_juros)),
             ("Total de taxas/seguros", format_currency(total_taxas)),
-            ("Correção", "R$ 0,00"),
             ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),
-            ("Quantidade de parcelas", f"{len(dataframe)}"),
+            ("Quantidade de parcelas", len(dataframe)),
             ("Valor da primeira parcela", format_currency(dataframe.iloc[0]['Prestação_Total'])),
             ("Valor da última parcela", format_currency(dataframe.iloc[-1]['Prestação_Total'])),
             ("Data da última parcela", data_ultima.strftime('%B de %Y')),
@@ -513,23 +267,21 @@ if 'simular' in st.session_state and st.session_state.simular:
         return f"<div class='metric-table'>{html}</div>"
 
     with col_sem:
-        with styled_container("card"):
-            st.markdown("<p class='card-title'>📋 Sem Amortização Extra</p>", unsafe_allow_html=True)
-            if not df_sem_extra.empty:
-                st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
-                st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
-                st.markdown("---")
-                st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
-                st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
+        st.markdown('<p class="section-title">📋 Sem Amortização Extra</p>', unsafe_allow_html=True)
+        if not df_sem_extra.empty:
+            st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
+            st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
+            st.divider()
+            st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
+            st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
 
     with col_com:
-        with styled_container("card"):
-            st.markdown("<p class='card-title'>🚀 Com Amortização Extra</p>", unsafe_allow_html=True)
-            if not df_com_extra.empty:
-                st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
-                st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
-                st.markdown("---")
-                st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
-                st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
-            else:
-                st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
+        st.markdown('<p class="section-title">🚀 Com Amortização Extra</p>', unsafe_allow_html=True)
+        if not df_com_extra.empty:
+            st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
+            st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
+            st.divider()
+            st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
+            st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
+        else:
+            st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
