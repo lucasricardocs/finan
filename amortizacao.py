@@ -275,14 +275,12 @@ st.markdown(f"""
         padding: 0 0.75rem;
     }}
     
-    /* Styling para separadores markdown */
-    hr {{
-        border: none;
-        height: 0px;
-        background: linear-gradient(90deg, transparent 0%, {PRIMARY_BLUE} 20%, {SANTANDER_RED} 80%, transparent 100%);
-        margin: 2rem 0;
-        border-radius: 2px;
-    }}
+    /* Info box styling */
+    .stInfo {
+        background: linear-gradient(135deg, #e3f2fd 0%, rgba(13, 110, 253, 0.1) 100%);
+        border: 1px solid #0d6efd;
+        border-radius: 12px;
+    }
     
     </style>
     """, unsafe_allow_html=True)
