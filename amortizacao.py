@@ -118,7 +118,7 @@ st.markdown("""
     }
     
     .section-title {
-        font-size: 2rem; /* Ajustado para um tamanho mais razoável para títulos de seção */
+        font-size: 6rem; /* Ajustado para um tamanho mais razoável para títulos de seção */
         font-weight: 600;
         color: #212529;
         margin-bottom: 1rem;
