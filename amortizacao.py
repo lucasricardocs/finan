@@ -1,9 +1,4 @@
-/* Info box styling */
-    .stInfo {{
-        background: linear-gradient(135deg, {LIGHT_BLUE} 0%, rgba(13, 110, 253, 0.1) 100%);
-        border: 1px solid {PRIMARY_BLUE};
-        border-radius: 12px;
-    }}# simulador_financiamento_final_corrigido.py
+# simulador_financiamento_final_corrigido.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
