@@ -459,16 +459,25 @@ if 'simular' in st.session_state and st.session_state.simular:
 if 'simular' in st.session_state and st.session_state.simular:
     col_sem, col_com = st.columns(2)
 
-def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
-    total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
-    data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
-    dados = [("Valor financiado", f"R$ {valor_financiado:,.2f}"), ("Total a ser pago", f"R$ {total_pagar:,.2f}"),("Total amortizado", "--"),
-             ("Total de juros", f"R$ {total_juros:,.2f}"),("Total de taxas/seguros", f"R$ {total_taxas:,.2f}"),("Correção", "R$ 0,00"),
-             ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),("Quantidade de parcelas", len(dataframe)),
-             ("Valor da primeira parcela", f"R$ {dataframe.iloc[0]['Prestação_Total']:,.2f}"),("Valor da última parcela", f"R$ {dataframe.iloc[-1]['Prestação_Total']:,.2f}"),
-             ("Data da última parcela", data_ultima.strftime('%B de %Y')),("Sistema de amortização", "SAC")]
-    html = "".join([f"<div class='metric-row'><span class='metric-label'>{l}</span><span class='metric-value'>{v}</span></div>" for l,v in dados])
-    return f"<div class='metric-table'>{html}</div>"
+    def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
+        total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
+        data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
+        dados = [
+            ("Valor financiado", f"R$ {valor_financiado:,.2f}"), 
+            ("Total a ser pago", f"R$ {total_pagar:,.2f}"),
+            ("Total amortizado", "--"),
+            ("Total de juros", f"R$ {total_juros:,.2f}"),
+            ("Total de taxas/seguros", f"R$ {total_taxas:,.2f}"),
+            ("Correção", "R$ 0,00"),
+            ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),
+            ("Quantidade de parcelas", len(dataframe)),
+            ("Valor da primeira parcela", f"R$ {dataframe.iloc[0]['Prestação_Total']:,.2f}"),
+            ("Valor da última parcela", f"R$ {dataframe.iloc[-1]['Prestação_Total']:,.2f}"),
+            ("Data da última parcela", data_ultima.strftime('%B de %Y')),
+            ("Sistema de amortização", "SAC")
+        ]
+        html = "".join([f"<div class='metric-row'><span class='metric-label'>{l}</span><span class='metric-value'>{v}</span></div>" for l,v in dados])
+        return f"<div class='metric-table'>{html}</div>"
 
     with col_sem:
         with styled_container("card"):
@@ -476,6 +485,7 @@ def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
             if not df_sem_extra.empty:
                 st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
                 st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
+                st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
                 st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
                 st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
 
@@ -485,6 +495,7 @@ def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
             if not df_com_extra.empty:
                 st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
                 st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
+                st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
                 st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
                 st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
             else:
