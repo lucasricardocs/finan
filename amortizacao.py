@@ -1,3 +1,4 @@
+
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -31,6 +32,8 @@ def format_currency(value):
 # -------------------------------
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Livvic:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,900&display=swap');
+    
     .stApp {
         background-color: #f8f9fa;
     }
@@ -68,27 +71,29 @@ st.markdown("""
     .title-text-container {
         display: flex;
         flex-direction: column;
-        align-items: flex-start; /* Alinha texto à esquerda dentro do container */
+        align-items: center; /* Centraliza o texto horizontalmente */
         justify-content: center;
         flex: 1; /* Ocupa o espaço restante */
+        text-align: center; /* Centraliza o texto */
     }
     
     .main-title {
-        font-size: 3.5rem; /* Ajustado para caber melhor no layout horizontal */
+        font-size: 4.8rem; /* Aumentado significativamente o tamanho */
         font-weight: 700;
         color: #0d6efd;
         margin: 0;
-        font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         letter-spacing: 0.5px;
-        line-height: 1.2; /* Melhor espaçamento entre linhas */
+        line-height: 1.1; /* Ajustado para o tamanho maior */
     }
 
     .subtitle {
-        font-size: 1.5rem; /* Ajustado para caber melhor no layout horizontal */
+        font-size: 2.2rem; /* Aumentado significativamente o tamanho */
         font-style: italic;
         color: #000000; /* Cor preta conforme solicitado */
-        margin-top: 0.8rem;
+        margin-top: 1rem;
         font-weight: 400;
+        font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil no texto */
     }
     
