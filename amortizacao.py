@@ -43,7 +43,7 @@ st.markdown("""
         border: 2px solid "black";
         border-radius: 20px; /* Bordas mais arredondadas */
         padding: 2rem; /* Aumentado o padding */
-        margin: 2rem auto; /* Aumentado a margem */
+        margin: 5rem auto; /* Aumentado a margem */
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
         box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
         animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite; /* Múltiplas animações */
