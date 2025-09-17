@@ -1,4 +1,4 @@
-# simulador_financiamento_plotly_ui.py
+# simulador_financiamento_plotly_final.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 # -------------------------------
-# ESTILOS E CORES (TEMA CLARO)
+# ESTILOS E CORES
 # -------------------------------
 SANTANDER_RED = "#EC0000"
 PRIMARY_BLUE = "#004481"
@@ -24,7 +24,7 @@ SUBTLE_TEXT_COLOR = "#4b5563"
 BACKGROUND_COLOR = "#f0f2f6"
 COMPONENT_BACKGROUND = "#ffffff"
 BORDER_COLOR = "#d1d5db"
-INPUT_BORDER_COLOR = "#6c757d" # Cinza escuro para a borda dos inputs
+SUCCESS_COLOR = "#16a34a" # Verde para economia
 
 st.markdown(f"""
     <style>
@@ -53,48 +53,32 @@ st.markdown(f"""
         border: none; border-top: 3px solid {SANTANDER_RED};
         margin: 2rem 0;
     }}
-    [data-testid="stMetric"] {{ background-color: {COMPONENT_BACKGROUND}; padding: 15px; border-radius: 8px; border: 1px solid {BORDER_COLOR}; }}
-    [data-testid="stMetricLabel"] {{ font-size: 1rem; color: {SUBTLE_TEXT_COLOR}; }}
-    [data-testid="stMetricValue"] {{ font-size: 2rem; color: {TEXT_COLOR}; }}
-    
-    /* Estilo para os inputs */
-    .stNumberInput, .stDateInput, .stRadio > div {{ /* stRadio precisa de > div */
+    /* Contêiner para os parâmetros */
+    .param-container {{
         background-color: {COMPONENT_BACKGROUND};
-        border-radius: 8px;
-        padding: 5px 10px;
-        border: 1px solid {INPUT_BORDER_COLOR}; /* Borda cinza escura */
-    }}
-    .stDateInput > label, .stNumberInput > label {{ /* Ajustar visibilidade de labels */
-        visibility: hidden; 
-        height: 0; 
-        margin: 0; 
-        padding: 0;
-    }}
-    /* Para labels do radio */
-    .stRadio > label {{
-        color: {SUBTLE_TEXT_COLOR};
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }}
-    /* Abas */
-    [data-testid="stTabs"] button {{
-        color: {SUBTLE_TEXT_COLOR};
-        font-weight: 500;
-    }}
-    [data-testid="stTabs"] button[aria-selected="true"] {{
-        color: {SANTANDER_RED};
-        font-weight: 600;
-        border-bottom: 2px solid {SANTANDER_RED};
-    }}
-    /* Tabelas */
-    .stDataFrame {{
+        padding: 10px 25px 25px 25px;
+        border-radius: 10px;
         border: 1px solid {BORDER_COLOR};
-        border-radius: 8px;
     }}
-    /* Mensagens de info/warning */
-    .stAlert {{
-        border-radius: 8px;
+    /* Cartões de Métrica Customizados */
+    .custom-metric-card {{
+        background-color: {COMPONENT_BACKGROUND};
+        padding: 25px;
+        border-radius: 10px;
+        border-top: 4px solid {SANTANDER_RED}; /* Bordinha vermelha */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        height: 100%; /* Garante a mesma altura */
+        display: flex;
+        flex-direction: column;
     }}
+    .metric-label {{ font-size: 1rem; color: {SUBTLE_TEXT_COLOR}; margin-bottom: 0.5rem; }}
+    .metric-value-container {{ display: flex; align-items: baseline; gap: 10px; }}
+    .metric-value {{ font-size: 2rem; font-weight: 600; color: {TEXT_COLOR}; }}
+    .metric-delta {{ font-size: 1.1rem; font-weight: 600; color: {SUCCESS_COLOR}; }}
+    
+    /* Abas */
+    [data-testid="stTabs"] button {{ color: {SUBTLE_TEXT_COLOR}; font-weight: 500; }}
+    [data-testid="stTabs"] button[aria-selected="true"] {{ color: {SANTANDER_RED}; font-weight: 600; border-bottom: 2px solid {SANTANDER_RED}; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -125,32 +109,28 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
 # -------------------------------
 st.title("Simulador de Financiamento")
 
-# --- Seção de Parâmetros ---
 with st.container():
+    st.markdown("<div class='param-container'>", unsafe_allow_html=True)
     param_col1, param_col2, param_col3 = st.columns(3)
     with param_col1:
         st.markdown("<h5>💵 Valores do Imóvel</h5>", unsafe_allow_html=True)
-        valor_imovel = st.number_input("Valor Total (R$)", value=600000.0, format="%.2f", key="valor_imovel", min_value=0.0)
-        min_entrada = valor_imovel * 0.20
-        entrada = st.number_input("Entrada (R$)", value=max(min_entrada, 120000.0), format="%.2f", key="entrada", min_value=0.0)
-        if entrada < min_entrada: st.warning(f"Atenção: A entrada de R$ {entrada:,.2f} está abaixo do mínimo recomendado de R$ {min_entrada:,.2f}.")
-
+        valor_imovel = st.number_input("Valor Total (R$)", value=600000.0, format="%.2f", key="valor_imovel", label_visibility="collapsed")
+        entrada = st.number_input("Entrada (R$)", value=120000.0, format="%.2f", key="entrada", label_visibility="collapsed")
     with param_col2:
         st.markdown("<h5>⚙️ Condições do Contrato</h5>", unsafe_allow_html=True)
-        taxa_juros = st.number_input("Taxa de Juros Anual (%)", value=10.5, format="%.2f", key="taxa")
-        num_parcelas = st.number_input("Prazo (meses)", value=360, step=12, key="parcelas")
-        data_inicio = st.date_input("Data de Início", value=datetime.now().date(), key="inicio")
+        taxa_juros = st.number_input("Taxa de Juros Anual (%)", value=10.5, format="%.2f", key="taxa", label_visibility="collapsed")
+        num_parcelas = st.number_input("Prazo (meses)", value=360, step=12, key="parcelas", label_visibility="collapsed")
     with param_col3:
         st.markdown("<h5>🚀 Amortização Extra</h5>", unsafe_allow_html=True)
-        amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=500.0, format="%.2f", key="extra", min_value=0.0)
+        amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=500.0, format="%.2f", key="extra", label_visibility="collapsed")
         tipo_amortizacao = st.radio("Objetivo:", ("Reduzir prazo", "Reduzir parcela"), key="tipo_amortizacao", horizontal=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 valor_financiado = valor_imovel - entrada
-st.info(f"**Valor a ser Financiado:** R$ {valor_financiado:,.2f}  |  **Entrada:** R$ {entrada:,.2f}  |  **Prazo:** {int(num_parcelas)} meses")
+st.info(f"**Valor a ser Financiado:** R$ {valor_financiado:,.2f}  |  **Entrada:** R$ {entrada:,.2f} ({entrada/valor_imovel:.1%} do total)")
 
 st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
 
-# --- Bloco Principal de Cálculos e Exibição ---
 if valor_financiado > 0:
     prazo_meses, taxa_juros_mes = int(num_parcelas), (1 + taxa_juros / 100) ** (1/12) - 1
     df_sem_extra = calcular_financiamento('prazo', valor_financiado, taxa_juros_mes, prazo_meses, 0.0)
@@ -159,170 +139,87 @@ if valor_financiado > 0:
         tipo = 'prazo' if tipo_amortizacao == "Reduzir prazo" else 'parcela'
         df_com_extra = calcular_financiamento(tipo, valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra)
 
-    # Função para criar o gráfico de pizza com Plotly
-    def criar_grafico_pizza_plotly(dataframe):
-        if dataframe.empty: return go.Figure()
-        
-        labels = ['Principal', 'Juros', 'Taxas/Seguro']
-        values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
-        colors = [PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR] # Cores ajustadas para o tema claro
-
-        fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, 
-                                     marker_colors=colors, 
-                                     # Adiciona a borda branca de 2px
-                                     marker=dict(line=dict(color='white', width=2)), 
-                                     # Texto no centro do donut (opcional, mas comum)
-                                     # textinfo='percent+label',
-                                     hoverinfo='label+percent+value',
-                                     hovertemplate="<b>%{label}</b><br>Valor: R$ %{value:,.2f}<br>Percentual: %{percent}<extra></extra>"
-                                    )])
-
-        fig.update_layout(
-            height=500,
-            showlegend=True,
-            margin=dict(l=20, r=20, t=40, b=20),
-            paper_bgcolor='rgba(0,0,0,0)',  # Fundo transparente da figura
-            plot_bgcolor='rgba(0,0,0,0)',   # Fundo transparente da área de plotagem
-            font=dict(color=TEXT_COLOR), # Cor da fonte para o tema claro
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1,
-                font=dict(color=SUBTLE_TEXT_COLOR) # Cor da legenda
-            )
-        )
-        return fig
-
     st.header("Análise Comparativa")
     
-    col_met_sem, col_met_com = st.columns(2)
-    with col_met_sem:
-        st.subheader("Cenário Padrão")
+    col_sem, col_com = st.columns(2)
+    with col_sem:
+        st.markdown("<div class='custom-metric-card'>", unsafe_allow_html=True)
+        st.markdown("<p class='section-header' style='margin-top:0; font-size: 1.5rem;'>Cenário Padrão</p>", unsafe_allow_html=True)
         if not df_sem_extra.empty:
             total_pagar, total_juros = df_sem_extra["Prestação_Total"].sum(), df_sem_extra["Juros"].sum()
-            st.metric("Custo Total", f"R$ {total_pagar:,.2f}")
-            st.metric("Total em Juros", f"R$ {total_juros:,.2f}")
-            st.metric("Prazo Final", f"{len(df_sem_extra)} meses")
-            st.plotly_chart(criar_grafico_pizza_plotly(df_sem_extra), use_container_width=True)
-    with col_met_com:
-        st.subheader("Cenário com Amortização Extra")
+            st.markdown(f"<p class='metric-label'>Custo Total</p><div class='metric-value-container'><p class='metric-value'>R$ {total_pagar:,.2f}</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<p class='metric-label'>Total em Juros</p><div class='metric-value-container'><p class='metric-value'>R$ {total_juros:,.2f}</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<p class='metric-label'>Prazo Final</p><div class='metric-value-container'><p class='metric-value'>{len(df_sem_extra)} meses</p></div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col_com:
+        st.markdown("<div class='custom-metric-card'>", unsafe_allow_html=True)
+        st.markdown("<p class='section-header' style='margin-top:0; font-size: 1.5rem;'>Cenário com Amortização Extra</p>", unsafe_allow_html=True)
         if not df_com_extra.empty:
             total_pagar_extra, total_juros_extra = df_com_extra["Prestação_Total"].sum(), df_com_extra["Juros"].sum()
             economia = total_pagar - total_pagar_extra
-            st.metric("Custo Total", f"R$ {total_pagar_extra:,.2f}", f"- R$ {economia:,.2f}")
-            st.metric("Total em Juros", f"R$ {total_juros_extra:,.2f}")
-            st.metric("Prazo Final", f"{len(df_com_extra)} meses")
-            st.plotly_chart(criar_grafico_pizza_plotly(df_com_extra), use_container_width=True)
+            st.markdown(f"<p class='metric-label'>Custo Total</p><div class='metric-value-container'><p class='metric-value'>R$ {total_pagar_extra:,.2f}</p><p class='metric-delta'>- R$ {economia:,.2f}</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<p class='metric-label'>Total em Juros</p><div class='metric-value-container'><p class='metric-value'>R$ {total_juros_extra:,.2f}</p></div>", unsafe_allow_html=True)
+            st.markdown(f"<p class='metric-label'>Prazo Final</p><div class='metric-value-container'><p class='metric-value'>{len(df_com_extra)} meses</p></div>", unsafe_allow_html=True)
         else:
             st.info("Nenhum cenário com amortização extra para comparar.")
-
+        st.markdown("</div>", unsafe_allow_html=True)
+        
     st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
     st.header("Análise Detalhada da Evolução")
     
-    df_plot = df_sem_extra.copy(); df_plot['Cenário'] = 'Padrão'
-    if not df_com_extra.empty:
-        df_com_extra_plot = df_com_extra.copy(); df_com_extra_plot['Cenário'] = 'Com Amortização'
-        df_plot = pd.concat([df_plot, df_com_extra_plot])
+    tab_saldo, tab_comp, tab_parcela, tab_pizza, tab_tabela = st.tabs(["📉 Saldo Devedor", "📊 Comp. Mensal", "📉 Evol. da Parcela", "🍕 Custo Total", "📋 Tabela"])
     
-    tab_saldo, tab_comp, tab_parcela, tab_tabela = st.tabs(["📉 Saldo Devedor", "📊 Composição Mensal", "📉 Evolução da Parcela", "📋 Tabela Detalhada"])
-    
-    # Função para layouts comuns do Plotly
-    def get_common_plotly_layout(title="", y_title="", legend_title="", show_legend=True):
-        return go.Layout(
-            height=500,
-            title_text=title,
-            title_x=0.05, # Alinha o título um pouco para a esquerda
-            paper_bgcolor='rgba(0,0,0,0)',
-            plot_bgcolor='rgba(0,0,0,0)',
-            font=dict(color=TEXT_COLOR),
-            xaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR)),
-            yaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickformat=",.0f", tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR)),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=1.02,
-                xanchor="right",
-                x=1,
-                title=legend_title,
-                font=dict(color=SUBTLE_TEXT_COLOR),
-                bgcolor='rgba(255,255,255,0.7)', # Fundo sutil para a legenda
-                bordercolor=BORDER_COLOR,
-                borderwidth=1
-            ) if show_legend else None,
-            margin=dict(l=20, r=20, t=50, b=20)
-        )
+    def get_common_plotly_layout(y_title="", legend_title="", show_legend=True):
+        layout = go.Layout(height=500, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color=TEXT_COLOR),
+                           xaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR)),
+                           yaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickformat=",.0f", tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR), title_text=y_title),
+                           legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=legend_title, font=dict(color=SUBTLE_TEXT_COLOR)),
+                           margin=dict(l=20, r=20, t=50, b=20))
+        if not show_legend: layout.update(showlegend=False)
+        return layout
 
     with tab_saldo:
-        fig_saldo = go.Figure(layout=get_common_plotly_layout(y_title="Saldo Devedor (R$)", legend_title="Cenário"))
-        fig_saldo.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Saldo_Devedor'],
-                                       mode='lines', name='Padrão',
-                                       line=dict(color=SUBTLE_TEXT_COLOR, width=2)))
+        fig = go.Figure(layout=get_common_plotly_layout(y_title="Saldo Devedor (R$)", legend_title="Cenário"))
+        fig.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Saldo_Devedor'], mode='lines', name='Padrão', line=dict(color=SUBTLE_TEXT_COLOR, width=2)))
         if not df_com_extra.empty:
-            fig_saldo.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Saldo_Devedor'],
-                                           mode='lines', name='Com Amortização',
-                                           line=dict(color=SANTANDER_RED, width=2)))
-        fig_saldo.update_yaxes(tickformat=",.2f") # Formato de moeda para Y
-        st.plotly_chart(fig_saldo, use_container_width=True)
+            fig.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Saldo_Devedor'], mode='lines', name='Com Amortização', line=dict(color=SANTANDER_RED, width=2)))
+        st.plotly_chart(fig, use_container_width=True)
         
     with tab_comp:
-        df_melted_comp = df_plot[df_plot['Mês'] <= 72].melt(id_vars=['Mês', 'Cenário'], value_vars=['Juros', 'Amortização'], var_name='Componente', value_name='Valor')
-        fig_comp = go.Figure()
-        
-        cenarios = ['Padrão', 'Com Amortização']
-        componentes = ['Juros', 'Amortização']
-        colors = {
-            'Juros': SANTANDER_RED,
-            'Amortização': PRIMARY_BLUE
-        }
-        
-        for cenario in cenarios:
-            for comp in componentes:
-                df_filtered = df_melted_comp[(df_melted_comp['Cenário'] == cenario) & (df_melted_comp['Componente'] == comp)]
-                fig_comp.add_trace(go.Bar(
-                    x=df_filtered['Mês'],
-                    y=df_filtered['Valor'],
-                    name=f'{comp} ({cenario})',
-                    marker_color=colors[comp],
-                    opacity=0.8,
-                    showlegend=True
-                ))
-        
-        fig_comp.update_layout(
-            barmode='stack',
-            xaxis_title="Meses (primeiros 6 anos)",
-            yaxis_title="Valor da Parcela (R$)",
-            **get_common_plotly_layout(y_title="Valor da Parcela (R$)", legend_title="Cenário / Componente").to_dict()
-        )
-        fig_comp.update_yaxes(tickformat=",.2f") # Formato de moeda para Y
-        st.plotly_chart(fig_comp, use_container_width=True)
+        fig = go.Figure(layout=get_common_plotly_layout(y_title="Valor da Parcela (R$)"))
+        fig.update_layout(barmode='stack', xaxis_title="Meses (primeiros 6 anos)")
+        df_view = df_sem_extra[df_sem_extra['Mês'] <= 72]
+        fig.add_trace(go.Bar(x=df_view['Mês'], y=df_view['Juros'], name='Juros', marker_color=SANTANDER_RED))
+        fig.add_trace(go.Bar(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização', marker_color=PRIMARY_BLUE))
+        st.plotly_chart(fig, use_container_width=True)
 
     with tab_parcela:
-        fig_parcela = go.Figure(layout=get_common_plotly_layout(y_title="Valor (R$)", legend_title="Variável / Cenário"))
-        
-        if not df_sem_extra.empty:
-            fig_parcela.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Prestação_Total'],
-                                             mode='lines', name='Total (Padrão)',
-                                             line=dict(color=SANTANDER_RED, width=2.5)))
-            fig_parcela.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Amortização'],
-                                             mode='lines', name='Amortização (Padrão)',
-                                             line=dict(color=PRIMARY_BLUE, width=2)))
-            fig_parcela.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Juros'],
-                                             mode='lines', name='Juros (Padrão)',
-                                             line=dict(color=SUBTLE_TEXT_COLOR, width=2)))
+        fig = go.Figure(layout=get_common_plotly_layout(y_title="Valor (R$)"))
+        fig.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Prestação_Total'], mode='lines', name='Total (Padrão)', line=dict(color=SANTANDER_RED, width=2.5)))
+        fig.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Amortização'], mode='lines', name='Amortização (Padrão)', line=dict(color=PRIMARY_BLUE, width=2)))
         if not df_com_extra.empty:
-            fig_parcela.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Prestação_Total'],
-                                             mode='lines', name='Total (Com Amort.)',
-                                             line=dict(color=SANTANDER_RED, width=2.5, dash='dash')))
-            fig_parcela.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Amortização'],
-                                             mode='lines', name='Amortização (Com Amort.)',
-                                             line=dict(color=PRIMARY_BLUE, width=2, dash='dash')))
-            fig_parcela.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Juros'],
-                                             mode='lines', name='Juros (Com Amort.)',
-                                             line=dict(color=SUBTLE_TEXT_COLOR, width=2, dash='dash')))
-        fig_parcela.update_yaxes(tickformat=",.2f") # Formato de moeda para Y
-        st.plotly_chart(fig_parcela, use_container_width=True)
+            fig.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Prestação_Total'], mode='lines', name='Total (Com Amort.)', line=dict(color=SANTANDER_RED, width=2.5, dash='dash')))
+            fig.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Amortização'], mode='lines', name='Amortização (Com Amort.)', line=dict(color=PRIMARY_BLUE, width=2, dash='dash')))
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with tab_pizza:
+        pizza_col_1, pizza_col_2 = st.columns(2)
+        with pizza_col_1:
+            st.subheader("Custo Total (Padrão)")
+            if not df_sem_extra.empty:
+                labels = ['Principal', 'Juros', 'Taxas/Seguro']; values = [df_sem_extra['Amortização'].sum(), df_sem_extra['Juros'].sum(), df_sem_extra['Taxas/Seguro'].sum()]
+                fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, marker_colors=[PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR], marker=dict(line=dict(color='white', width=2)), hoverinfo='label+percent+value')])
+                fig.update_layout(height=500, showlegend=True, paper_bgcolor='rgba(0,0,0,0)', font=dict(color=TEXT_COLOR))
+                st.plotly_chart(fig, use_container_width=True)
+        with pizza_col_2:
+            st.subheader("Custo Total (Com Amort.)")
+            if not df_com_extra.empty:
+                labels = ['Principal', 'Juros', 'Taxas/Seguro']; values = [df_com_extra['Amortização'].sum(), df_com_extra['Juros'].sum(), df_com_extra['Taxas/Seguro'].sum()]
+                fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, marker_colors=[PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR], marker=dict(line=dict(color='white', width=2)), hoverinfo='label+percent+value')])
+                fig.update_layout(height=500, showlegend=True, paper_bgcolor='rgba(0,0,0,0)', font=dict(color=TEXT_COLOR))
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Nenhum cenário com amortização extra para comparar.")
 
     with tab_tabela:
         st.header("Tabela de Amortização Completa")
@@ -333,6 +230,3 @@ if valor_financiado > 0:
         st.dataframe(df_sem_extra, use_container_width=True, height=500)
 else:
     st.error("O 'Valor a ser Financiado' deve ser maior que zero. Ajuste os parâmetros da simulação.")
-
-st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
-st.caption("Aviso Legal: Esta é uma ferramenta de simulação e os resultados são para fins ilustrativos.")
