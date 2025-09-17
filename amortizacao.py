@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -41,60 +40,60 @@ st.markdown("""
     /* Container animado para o título */
     .title-container {
         border: 2px solid "#ffffff";
-        border-radius: 20px; /* Bordas mais arredondadas */
-        padding: 2rem; /* Aumentado o padding */
-        margin: 5rem auto; /* Aumentado a margem */
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
-        animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite; /* Múltiplas animações */
+        border-radius: 20px;
+        padding: 2rem;
+        margin: 5rem auto;
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        animation: fadeInUp 1s ease-out, pulseGlow 3s ease-in-out infinite;
         display: flex;
-        flex-direction: row; /* Mudado para row para posicionar logo à esquerda */
+        flex-direction: row;
         align-items: center;
         justify-content: center;
-        gap: 0.002rem; /* Aumentado o gap entre logo e texto */
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-        height: 300px; /* Altura fixa conforme solicitado */
+        gap: 1rem; /* Reduzido o gap para aproximar logo do título */
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        height: 300px;
     }
     .title-container:hover {
-        transform: translateY(-8px) scale(1.02); /* Efeito de escala no hover */
-        box-shadow: 0 12px 24px rgba(0,0,0,0.25); /* Sombra ainda mais pronunciada no hover */
-        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%); /* Mudança de gradiente no hover */
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%);
     }
     
     .title-logo {
-        height: 300px; /* Altura compatível com container de 450px */
-        width: 300px; /* Largura proporcional */
+        height: 300px;
+        width: 300px;
         object-fit: contain;
-        flex-shrink: 0; /* Impede que o logo encolha */
+        flex-shrink: 0;
     }
     
     .title-text-container {
         display: flex;
         flex-direction: column;
-        align-items: center; /* Centraliza o texto horizontalmente */
+        align-items: center;
         justify-content: center;
-        flex: 1; /* Ocupa o espaço restante */
-        text-align: center; /* Centraliza o texto */
+        flex: 1;
+        text-align: center;
     }
     
     .main-title {
-        font-size: 10rem; /* Aumentado significativamente o tamanho */
+        font-size: 12rem; /* Aumentado ainda mais o tamanho da fonte */
         font-weight: 700;
         color: #dedtdq;
         margin: 0;
         font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         letter-spacing: 0.5px;
-        line-height: 1.1; /* Ajustado para o tamanho maior */
+        line-height: 1.1;
     }
 
     .subtitle {
-        font-size: 2.2rem; /* Aumentado significativamente o tamanho */
+        font-size: 2.2rem;
         font-style: italic;
-        color: #000000; /* Cor preta conforme solicitado */
+        color: #000000;
         margin-top: 0.5rem;
         font-weight: 400;
         font-family: 'Livvic', 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.1); /* Sombra sutil no texto */
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
     }
     
     @keyframes fadeInUp {
@@ -118,11 +117,11 @@ st.markdown("""
     }
     
     .section-title {
-        font-size: 6rem; /* Ajustado para um tamanho mais razoável para títulos de seção */
+        font-size: 6rem;
         font-weight: 600;
         color: #212529;
         margin-bottom: 1rem;
-        text-align: center; /* Centralizado títulos de seção */
+        text-align: center;
     }
     .param-grid {
         display: grid;
@@ -131,24 +130,24 @@ st.markdown("""
         margin-bottom: 1.5rem;
     }
     .param-box {
-        padding: 1.5rem; /* Aumentado o padding */
+        padding: 1.5rem;
         border: 1px solid #dee2e6;
-        border-radius: 12px; /* Bordas mais arredondadas */
+        border-radius: 12px;
         text-align: center;
-        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
-        box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Sombra inicial */
-        min-height: 120px; /* Altura mínima aumentada */
+        background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        min-height: 120px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
     }
     .param-box:hover {
-        transform: translateY(-8px) scale(1.03); /* Efeito de escala no hover */
-        box-shadow: 0 8px 20px rgba(0,0,0,0.2); /* Sombra mais pronunciada */
-        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%); /* Mudança de gradiente */
-        border-color: #0d6efd; /* Mudança da cor da borda */
+        transform: translateY(-8px) scale(1.03);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        background: linear-gradient(135deg, #ffffff 0%, #e9ecef 100%);
+        border-color: #0d6efd;
     }
     .param-label {
         font-size: 0.9rem;
@@ -200,21 +199,17 @@ st.markdown("""
         justify-content: space-between;
         padding: 0.75rem 0;
         border-bottom: 1px solid #dee2e6;
-        transition: all 0.3s ease;
-        position: relative;
+        /* Removido transition e position */
     }
     
     .metric-row:last-child {
         border-bottom: none;
     }
     
-    /* Animação de hover nos dados */
+    /* Somente efeito hover, sem animação */
     .metric-row:hover {
-        background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%); /* Gradiente no hover */
-        transform: translateX(8px) scale(1.02); /* Movimento e escala */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* Sombra mais pronunciada */
-        border-radius: 8px; /* Bordas arredondadas */
-        border-left: 4px solid #0d6efd; /* Borda colorida à esquerda */
+        background: linear-gradient(90deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 8px;
     }
     
     .metric-label {
@@ -286,7 +281,7 @@ def criar_grafico_pizza(dataframe):
     fig.update_layout(
         title="Composição do Financiamento",
         title_x=0.5,
-        height=800, # Aumentado ainda mais a altura
+        height=800,
         showlegend=False, 
         margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
@@ -309,7 +304,7 @@ def criar_grafico_barras(dataframe):
         title="Evolução das Parcelas por Mês",
         title_x=0.5,
         barmode='stack', 
-        height=800, # Aumentado ainda mais a altura
+        height=800,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -339,7 +334,7 @@ def criar_grafico_linha(dataframe):
     fig.update_layout(
         title="Evolução de Juros, Amortização e Parcela",
         title_x=0.5,
-        height=800, # Aumentado ainda mais a altura
+        height=800,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
