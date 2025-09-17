@@ -45,26 +45,33 @@ st.markdown("""
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         animation: fadeInUp 0.8s ease-out;
         text-align: center;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        display: flex;        align-items: center;  justify-content: center;
         gap: 1rem;
-        height: 15rem;
+        /* height: 15rem; */
     }
     
     .title-logo {
-        height: 3rem;
-        width: 3rem;
+        /* height: 3rem;
+        width: 3rem; */
+        max-height: 100%;
+        max-width: 100%;
         object-fit: contain;
     }
     
     .main-title {
-        font-size: 16px;
+        font-size: 3rem;
         font-weight: 700;
         color: #0d6efd;
         margin: 0;
         font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
         letter-spacing: 0.5px;
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+        font-style: italic;
+        color: #212529;
+        margin-top: 0.5rem;
     }
     
     @keyframes fadeInUp {
@@ -96,6 +103,11 @@ st.markdown("""
         border-radius: 8px;
         text-align: center;
         background-color: white;
+        transition: all 0.3s ease;
+    }
+    .param-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
     .param-label {
         font-size: 0.9rem;
@@ -168,12 +180,22 @@ st.markdown("""
         flex: 1;
         padding-right: 1rem;
     }
-    
-    .metric-value {
+        .metric-value {
         font-weight: 600;
         flex: 1;
         text-align: right;
         padding-left: 1rem;
+    }
+
+    @keyframes gradient-animation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    </style>ames gradient-animation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
     }
     </style>
 """, unsafe_allow_html=True)
@@ -227,7 +249,7 @@ def criar_grafico_pizza(dataframe):
     fig.update_layout(
         title="Composição do Financiamento",
         title_x=0.5,
-        height=450,
+        height=700,
         showlegend=False, 
         margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
@@ -249,8 +271,8 @@ def criar_grafico_barras(dataframe):
     fig.update_layout(
         title="Evolução das Parcelas por Mês",
         title_x=0.5,
-        barmode='stack', 
-        height=450,
+        barmode=\'stack\', 
+        height=700,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -280,7 +302,7 @@ def criar_grafico_linha(dataframe):
     fig.update_layout(
         title="Evolução de Juros, Amortização e Parcela",
         title_x=0.5,
-        height=450,
+        height=700,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
@@ -295,24 +317,28 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.markdown('<div class="title-container"><img src="data:image/png;base64,' + base64.b64encode(open("casa.png", "rb").read()).decode() + '" class="title-logo" alt="Logo"><p class="main-title">🏦 Simulação de Financiamento e Amortização</p></div>', unsafe_allow_html=True)
+st.markdown('<div class="title-container"><img src="data:image/png;base64,' + base64.b64encode(open("casa.png", "rb").read()).decode() + '" class="title-logo" alt="Logo"><p class="main-title">🏦 Simulação de Financiamento e Amortização</p><p class="subtitle">*Seu futuro financeiro, planejado hoje.*</p></div>', unsafe_allow_html=True)
 
 # Seção de parâmetros
 with st.expander("Configurar Parâmetros da Simulação", expanded=True):
     col1, col2, col3 = st.columns(3)
     with col1:
-        valor_imovel_input = st.number_input("💰 Valor do Imóvel", value=625000.0, format="%.2f")
-        entrada_input = st.number_input("💵 Valor da Entrada", value=125000.0, format="%.2f")
-        taxa_juros_input = st.number_input("📈 Taxa de Juros Anual (%)", value=9.93, format="%.2f")
+        valor_imovel_input = st.number_input("💰 Valor do Imóvel", value=0.0, format="%.2f")
+        entrada_input = st.number_input("💵 Valor da Entrada", value=0.0, format="%.2f")
+        taxa_juros_input = st.number_input("📈 Taxa de Juros Anual (%)", value=0.0, format="%.2f")
     with col2:
-        num_parcelas_input = st.number_input("📅 Nº de Parcelas", value=360, step=12)
-        data_inicio_input = st.date_input("🗓️ Início do Financiamento", value=datetime(2025, 9, 16))
+        num_parcelas_input = st.number_input("📅 Nº de Parcelas", value=0, step=12)
+        data_inicio_input = st.date_input("🗓️ Início do Financiamento", value=datetime.now().date())
     with col3:
-        amortizacao_extra = st.number_input("💪 Valor Extra Mensal (R$)", value=500.0, format="%.2f")
+        amortizacao_extra = st.number_input("💪 Valor Extra Mensal (R$)", value=0.0, format="%.2f")
         tipo_amortizacao = st.radio("🎯 Objetivo da Amortização:", ("Reduzir prazo", "Reduzir parcela"), horizontal=True)
 
     if st.button("🚀 **SIMULAR FINANCIAMENTO**", type="primary", use_container_width=True):
-        st.session_state.simular = True
+        if valor_imovel_input > 0 and entrada_input < (valor_imovel_input * 0.20):
+            st.error("A entrada não pode ser menor que 20% do valor do imóvel.")
+            st.session_state.simular = False
+        else:
+            st.session_state.simular = True
 
 # Cálculos
 if 'simular' in st.session_state and st.session_state.simular:
