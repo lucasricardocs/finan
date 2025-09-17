@@ -61,8 +61,8 @@ st.markdown("""
     }
     
     .title-logo {
-        height: auto; /* Removido limitação de altura */
-        width: auto; /* Removido limitação de largura */
+        height: 4.5rem; /* Removido limitação de altura */
+        width: 4.5rem; /* Removido limitação de largura */
         max-height: none; /* Removido limitação máxima de altura */
         max-width: none; /* Removido limitação máxima de largura */
         min-height: 200px; /* Tamanho mínimo para garantir visibilidade */
@@ -351,7 +351,7 @@ st.markdown(
     f"""
     <div class="title-container">
         <img src="https://github.com/lucasricardocs/finan/blob/main/casa.png?raw=true" class="title-logo" alt="Logo">
-        <p class="main-title">🏦 Simulação de Financiamento e Amortização</p>
+        <p class="main-title">Simulação de Financiamento e Amortização</p>
         <p class="subtitle">Transformando sonhos em realidade financeira</p>
     </div>
     """, unsafe_allow_html=True)
