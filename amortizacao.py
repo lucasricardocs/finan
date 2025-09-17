@@ -1,4 +1,4 @@
-# simulador_financiamento_final_completo.py
+# simulador_financiamento_final_corrigido.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -36,17 +36,31 @@ st.markdown(f"""
         background-color: {BACKGROUND_COLOR};
         color: {TEXT_COLOR};
     }}
-
-    /* --- Animação de Fade-in para os Cards --- */
-    @keyframes fadeInUp {{
-        from {{
-            opacity: 0;
-            transform: translateY(20px);
-        }}
-        to {{
-            opacity: 1;
-            transform: translateY(0);
-        }}
+    
+    /* --- CORREÇÃO DO ÍCONE DO EXPANSÍVEL --- */
+    [data-testid="stExpander"] summary {{
+      position: relative;
+      padding-left: 2rem;
+    }}
+    /* Esconde o ícone quebrado original do Streamlit */
+    [data-testid="stExpander"] summary .st-emotion-cache-1282ie9, 
+    [data-testid="stExpander"] summary .st-emotion-cache-g85b5l {{
+        display: none;
+    }}
+    /* Cria nosso próprio ícone de seta (▶) */
+    [data-testid="stExpander"] summary::before {{
+        content: '▶';
+        font-size: 14px;
+        color: {SUBTLE_TEXT_COLOR};
+        position: absolute;
+        left: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%) rotate(0deg);
+        transition: transform 0.2s ease-in-out;
+    }}
+    /* Gira nosso ícone (▼) quando o expansível está aberto */
+    [data-testid="stExpander"][open] > summary::before {{
+        transform: translateY(-50%) rotate(90deg);
     }}
 
     /* --- Contêineres (Cards) --- */
@@ -54,36 +68,18 @@ st.markdown(f"""
         background-color: {COMPONENT_BACKGROUND};
         border-radius: 0.5rem;
         padding: 25px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         margin-bottom: 2rem;
         height: 100%;
-        animation: fadeInUp 0.5s ease-out forwards;
     }}
     .card-title {{
         font-size: 1.25rem;
         font-weight: 600;
         color: {TEXT_COLOR};
         margin-bottom: 1.5rem;
-        padding-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
         border-bottom: 1px solid {BORDER_COLOR};
-        position: relative;
     }}
-    /* --- Animação da Linha no Título --- */
-    .card-title::after {{
-        content: '';
-        position: absolute;
-        bottom: -1px; /* Posiciona sobre a borda cinza */
-        left: 0;
-        width: 0%;
-        height: 2px;
-        background-color: {SANTANDER_RED};
-        transition: width 0.4s ease-in-out;
-    }}
-    .card:hover .card-title::after {{
-        width: 100%;
-    }}
-    
-    /* --- Seção de Parâmetros --- */
     .param-grid {{
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -104,7 +100,6 @@ st.markdown(f"""
         font-weight: 600;
         color: {PRIMARY_BLUE};
     }}
-    /* --- Tabela de Métricas de Resultado --- */
     .metric-table {{
         width: 100%;
         margin-bottom: 2rem;
@@ -115,8 +110,15 @@ st.markdown(f"""
         padding: 0.75rem 0;
         border-bottom: 1px solid #f0f0f0;
     }}
-    .metric-label {{ color: {SUBTLE_TEXT_COLOR}; font-size: 0.9rem; }}
-    .metric-value {{ font-weight: 600; color: {TEXT_COLOR}; font-size: 0.95rem; }}
+    .metric-label {{
+        color: {SUBTLE_TEXT_COLOR};
+        font-size: 0.9rem;
+    }}
+    .metric-value {{
+        font-weight: 600;
+        color: {TEXT_COLOR};
+        font-size: 0.95rem;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -155,8 +157,7 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
 # -------------------------------
 def criar_grafico_pizza(dataframe):
     if dataframe.empty: return go.Figure()
-    labels = ['Principal', 'Juros', 'Taxas/Seguro']
-    values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
+    labels = ['Principal', 'Juros', 'Taxas/Seguro']; values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
     colors = [PRIMARY_BLUE, SANTANDER_RED, '#aaaaaa']
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, marker_colors=colors, hovertemplate="<b>%{label}</b><br>R$ %{value:,.2f}<br>%{percent}<extra></extra>")])
     fig.update_layout(height=300, showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), margin=dict(l=20, r=20, t=20, b=20), paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
@@ -189,7 +190,8 @@ st.title("Simulação de Financiamento")
 with st.expander("⚙️ Configurar Parâmetros da Simulação", expanded=True):
     col1, col2, col3 = st.columns(3)
     with col1:
-        valor_financiado_input = st.number_input("Valor do Empréstimo", value=500000.0, format="%.2f")
+        valor_imovel_input = st.number_input("Valor do Imóvel", value=625000.0, format="%.2f")
+        entrada_input = st.number_input("Valor da Entrada", value=125000.0, format="%.2f")
         taxa_juros_input = st.number_input("Taxa de Juros Anual (%)", value=9.93, format="%.2f")
     with col2:
         num_parcelas_input = st.number_input("Nº de Parcelas", value=360, step=12)
@@ -199,6 +201,7 @@ with st.expander("⚙️ Configurar Parâmetros da Simulação", expanded=True):
         tipo_amortizacao = st.radio("Objetivo da Amortização:", ("Reduzir prazo", "Reduzir parcela"), horizontal=True)
 
 # --- Cálculos ---
+valor_financiado_input = valor_imovel_input - entrada_input
 prazo_meses, taxa_juros_mes = int(num_parcelas_input), (1 + taxa_juros_input / 100) ** (1/12) - 1
 df_sem_extra = calcular_financiamento('prazo', valor_financiado_input, taxa_juros_mes, prazo_meses, 0.0)
 df_com_extra = pd.DataFrame()
