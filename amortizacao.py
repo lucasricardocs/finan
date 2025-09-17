@@ -1,35 +1,4 @@
-Okay, entendi perfeitamente\! Vamos refatorar a interface para usar **Plotly** para os gráficos, aplicar os ajustes de estilo que você pediu (borda nos gráficos de pizza, bordas nos inputs) e, ao mesmo tempo, melhorar a estética geral da UI para um visual mais limpo e moderno.
 
-A Plotly é excelente para interatividade e customização, e vamos aproveitá-la ao máximo.
-
-### 🎨 O que há de novo nesta versão com Plotly e UI aprimorada:
-
-1.  **Gráficos com Plotly**: Todos os gráficos (pizza, saldo devedor, composição mensal e evolução da parcela) foram reimplementados usando Plotly, trazendo sua interatividade nativa e alta fidelidade visual.
-
-2.  **Gráfico de Pizza com Borda (stroke)**:
-
-      * Implementado com `hovertemplate` para exibir informações detalhadas ao passar o mouse.
-      * Ajustado para ter `line.width=2` e `line.color='white'` para criar um **borda (stroke) branca de 2px**, dando mais destaque às fatias.
-
-3.  **Borda nos Inputs (strokewidth=1 e cor cinza escuro)**:
-
-      * Adicionei estilos CSS para aplicar uma borda sutil (`1px solid #6c757d` - cinza escuro) a todos os `st.number_input`, `st.date_input` e `st.radio`, destacando os campos de entrada de forma elegante.
-
-4.  **Melhorias na UI Geral**:
-
-      * **Padding e Espaçamento**: Ajustes finos de padding e margin para uma distribuição mais equilibrada dos elementos, melhorando o "respiro" visual.
-      * **Tipografia Refinada**: Mantive a fonte `Open Sans` e ajustei os pesos e tamanhos para uma hierarquia visual mais clara.
-      * **Cores Consistentes**: A paleta de cores (cinza claro de fundo, branco para componentes, vermelho Santander e azul primário) foi mantida e aplicada de forma mais coesa.
-      * **Indicador de Valor Financiado**: O `st.info` foi estilizado para se integrar melhor, mostrando claramente o valor financiado logo abaixo dos parâmetros.
-      * **Remoção de Borda Interna nos Gráficos**: Garanti que os gráficos Plotly tenham `paper_bgcolor='rgba(0,0,0,0)'` e `plot_bgcolor='rgba(0,0,0,0)'`, além de remover o grid, mantendo o fundo transparente e limpo.
-
-Este código reflete a sua solicitação com uma UI mais polida e gráficos Plotly de alta qualidade.
-
------
-
-### Código Completo com Gráficos Plotly e UI Melhorada
-
-```python
 # simulador_financiamento_plotly_ui.py
 import streamlit as st
 import pandas as pd
