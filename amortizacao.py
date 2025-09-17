@@ -1,4 +1,4 @@
-# simulador_financiamento_plotly_final.py
+# simulador_financiamento_plotly.py
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -8,23 +8,22 @@ from datetime import datetime, timedelta
 # CONFIGURAÇÃO GERAL
 # -------------------------------
 st.set_page_config(
-    page_title="Simulador de Financiamento (Plotly)",
+    page_title="Simulação de Financiamento",
     page_icon="🏦",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
 # -------------------------------
 # ESTILOS E CORES
 # -------------------------------
+PRIMARY_BLUE = "#0d6efd"
 SANTANDER_RED = "#EC0000"
-PRIMARY_BLUE = "#004481"
-TEXT_COLOR = "#1f2937"
-SUBTLE_TEXT_COLOR = "#4b5563"
-BACKGROUND_COLOR = "#f0f2f6"
+TEXT_COLOR = "#212529"
+SUBTLE_TEXT_COLOR = "#6c757d"
+BACKGROUND_COLOR = "#f8f9fa"
+BORDER_COLOR = "#dee2e6"
 COMPONENT_BACKGROUND = "#ffffff"
-BORDER_COLOR = "#d1d5db"
-SUCCESS_COLOR = "#16a34a" # Verde para economia
 
 st.markdown(f"""
     <style>
@@ -37,53 +36,73 @@ st.markdown(f"""
         background-color: {BACKGROUND_COLOR};
         color: {TEXT_COLOR};
     }}
-    h1 {{
-        font-size: 2.5rem; font-weight: 700; color: {TEXT_COLOR};
-        padding-bottom: 0.5rem; border-bottom: 4px solid {SANTANDER_RED};
+    /* --- Contêineres (Cards) --- */
+    .card {{
+        background-color: {COMPONENT_BACKGROUND};
+        border-radius: 0.5rem;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        margin-bottom: 2rem;
+        height: 100%;
+    }}
+    .card-title {{
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: {TEXT_COLOR};
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid {BORDER_COLOR};
+    }}
+    /* --- Seção de Parâmetros --- */
+    .param-grid {{
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }}
+    .param-box {{
+        padding: 1rem;
+        border: 1px solid {BORDER_COLOR};
+        border-radius: 0.25rem;
+        text-align: center;
+    }}
+    .param-label {{
+        font-size: 0.9rem;
+        color: {SUBTLE_TEXT_COLOR};
+    }}
+    .param-value {{
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: {PRIMARY_BLUE};
+    }}
+    /* --- Tabela de Métricas de Resultado --- */
+    .metric-table {{
+        width: 100%;
         margin-bottom: 2rem;
     }}
-    h2 {{
-        font-size: 1.75rem; font-weight: 600; color: {SUBTLE_TEXT_COLOR};
-        margin-top: 2rem; margin-bottom: 1.5rem;
-    }}
-    h5 {{
-        font-weight: 600; color: #475569; margin-bottom: 1rem;
-    }}
-    .styled-hr {{
-        border: none; border-top: 3px solid {SANTANDER_RED};
-        margin: 2rem 0;
-    }}
-    /* Contêiner para os parâmetros */
-    .param-container {{
-        background-color: {COMPONENT_BACKGROUND};
-        padding: 10px 25px 25px 25px;
-        border-radius: 10px;
-        border: 1px solid {BORDER_COLOR};
-    }}
-    /* Cartões de Métrica Customizados */
-    .custom-metric-card {{
-        background-color: {COMPONENT_BACKGROUND};
-        padding: 25px;
-        border-radius: 10px;
-        border-top: 4px solid {SANTANDER_RED}; /* Bordinha vermelha */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        height: 100%; /* Garante a mesma altura */
+    .metric-row {{
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
     }}
-    .metric-label {{ font-size: 1rem; color: {SUBTLE_TEXT_COLOR}; margin-bottom: 0.5rem; }}
-    .metric-value-container {{ display: flex; align-items: baseline; gap: 10px; }}
-    .metric-value {{ font-size: 2rem; font-weight: 600; color: {TEXT_COLOR}; }}
-    .metric-delta {{ font-size: 1.1rem; font-weight: 600; color: {SUCCESS_COLOR}; }}
-    
-    /* Abas */
-    [data-testid="stTabs"] button {{ color: {SUBTLE_TEXT_COLOR}; font-weight: 500; }}
-    [data-testid="stTabs"] button[aria-selected="true"] {{ color: {SANTANDER_RED}; font-weight: 600; border-bottom: 2px solid {SANTANDER_RED}; }}
+    .metric-label {{
+        color: {SUBTLE_TEXT_COLOR};
+        font-size: 0.9rem;
+    }}
+    .metric-value {{
+        font-weight: 600;
+        color: {TEXT_COLOR};
+        font-size: 0.95rem;
+    }}
+    /* --- Barra Lateral --- */
+    [data-testid="stSidebar"] {{
+        background-color: {COMPONENT_BACKGROUND};
+    }}
     </style>
     """, unsafe_allow_html=True)
 
 # -------------------------------
-# FUNÇÕES DE CÁLCULO (Inalteradas)
+# FUNÇÕES DE CÁLCULO
 # -------------------------------
 @st.cache_data
 def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra_mensal=0.0):
@@ -105,128 +124,124 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
     return pd.DataFrame(dados)
 
 # -------------------------------
+# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS (PLOTLY)
+# -------------------------------
+def criar_grafico_pizza(dataframe):
+    if dataframe.empty: return go.Figure()
+    
+    labels = ['Principal', 'Juros', 'Taxas/Seguro']
+    values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
+    colors = [PRIMARY_BLUE, SANTANDER_RED, '#6c757d']
+    
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, 
+                                 marker_colors=colors,
+                                 hovertemplate="<b>%{label}</b><br>R$ %{value:,.2f}<br>%{percent}<extra></extra>")])
+    fig.update_layout(height=300, showlegend=True,
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                      margin=dict(l=20, r=20, t=20, b=20),
+                      paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    return fig
+
+def criar_grafico_barras(dataframe):
+    if dataframe.empty: return go.Figure()
+    
+    df_view = dataframe[dataframe['Mês'] <= 36]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(name='Amortização', x=df_view['Mês'], y=df_view['Amortização'], marker_color=PRIMARY_BLUE))
+    fig.add_trace(go.Bar(name='Juros', x=df_view['Mês'], y=df_view['Juros'], marker_color=SANTANDER_RED))
+    fig.add_trace(go.Bar(name='Taxas/Seguro', x=df_view['Mês'], y=df_view['Taxas/Seguro'], marker_color='#6c757d'))
+    
+    fig.update_layout(barmode='stack', height=300,
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                      paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                      margin=dict(l=20, r=20, t=20, b=20),
+                      xaxis=dict(showgrid=False, title=''), yaxis=dict(showgrid=False, title=''))
+    return fig
+
+def criar_grafico_linha(dataframe):
+    if dataframe.empty: return go.Figure()
+    
+    df_view = dataframe[dataframe['Mês'] <= 36]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Prestação_Total'], name='Parcela', mode='lines+markers', line=dict(color=PRIMARY_BLUE)))
+    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização mensal', mode='lines+markers', line=dict(color=SANTANDER_RED)))
+    
+    fig.update_layout(height=300,
+                      legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+                      paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                      margin=dict(l=20, r=20, t=20, b=20),
+                      xaxis=dict(showgrid=False, title=''), yaxis=dict(showgrid=False, title=''))
+    return fig
+
+# -------------------------------
+# BARRA LATERAL (CONTROLES)
+# -------------------------------
+with st.sidebar:
+    st.image('https://logospng.org/download/santander/logo-santander-1024.png', width=150)
+    st.title("Configurar Simulação")
+    valor_financiado_input = st.number_input("Valor do Empréstimo", value=500000.0, format="%.2f")
+    taxa_juros_input = st.number_input("Taxa de Juros Anual (%)", value=9.93, format="%.2f")
+    num_parcelas_input = st.number_input("Nº de Parcelas", value=360, step=12)
+    data_inicio_input = st.date_input("Início do Financiamento", value=datetime(2025, 9, 1))
+    
+    st.markdown("---")
+    st.subheader("Amortização Extra")
+    amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=0.0, format="%.2f")
+    tipo_amortizacao = st.radio("Objetivo da Amortização:", ("Reduzir prazo", "Reduzir parcela"), horizontal=True)
+
+# -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.title("Simulador de Financiamento")
+prazo_meses, taxa_juros_mes = int(num_parcelas_input), (1 + taxa_juros_input / 100) ** (1/12) - 1
+df_sem_extra = calcular_financiamento('prazo', valor_financiado_input, taxa_juros_mes, prazo_meses, 0.0)
+df_com_extra = pd.DataFrame()
+if amortizacao_extra > 0:
+    tipo = 'prazo' if tipo_amortizacao == "Reduzir prazo" else 'parcela'
+    df_com_extra = calcular_financiamento(tipo, valor_financiado_input, taxa_juros_mes, prazo_meses, amortizacao_extra)
 
-with st.container():
-    st.markdown("<div class='param-container'>", unsafe_allow_html=True)
-    param_col1, param_col2, param_col3 = st.columns(3)
-    with param_col1:
-        st.markdown("<h5>💵 Valores do Imóvel</h5>", unsafe_allow_html=True)
-        valor_imovel = st.number_input("Valor Total (R$)", value=600000.0, format="%.2f", key="valor_imovel", label_visibility="collapsed")
-        entrada = st.number_input("Entrada (R$)", value=120000.0, format="%.2f", key="entrada", label_visibility="collapsed")
-    with param_col2:
-        st.markdown("<h5>⚙️ Condições do Contrato</h5>", unsafe_allow_html=True)
-        taxa_juros = st.number_input("Taxa de Juros Anual (%)", value=10.5, format="%.2f", key="taxa", label_visibility="collapsed")
-        num_parcelas = st.number_input("Prazo (meses)", value=360, step=12, key="parcelas", label_visibility="collapsed")
-    with param_col3:
-        st.markdown("<h5>🚀 Amortização Extra</h5>", unsafe_allow_html=True)
-        amortizacao_extra = st.number_input("Valor Extra Mensal (R$)", value=500.0, format="%.2f", key="extra", label_visibility="collapsed")
-        tipo_amortizacao = st.radio("Objetivo:", ("Reduzir prazo", "Reduzir parcela"), key="tipo_amortizacao", horizontal=True)
+st.markdown("<div class='card'><p class='card-title'>Parâmetros de financiamento</p><div class='param-grid'>"
+            f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>R$ {valor_financiado_input:,.2f}</p></div>"
+            f"<div class='param-box'><p class='param-label'>Início</p><p class='param-value'>{data_inicio_input.strftime('%B de %Y')}</p></div>"
+            f"<div class='param-box'><p class='param-label'>Tabela</p><p class='param-value'>SAC</p></div>"
+            f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f} %</p></div>"
+            f"<div class='param-box'><p class='param-label'>Juros</p><p class='param-value'>a.a</p></div>"
+            f"<div class='param-box'><p class='param-label'>Nº de parcelas</p><p class='param-value'>{num_parcelas_input}</p></div>"
+            "</div></div>", unsafe_allow_html=True)
+
+col_sem, col_com = st.columns(2)
+
+with col_sem:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<p class='card-title'>Sem amortização extra</p>", unsafe_allow_html=True)
+    if not df_sem_extra.empty:
+        total_pagar, total_juros, total_taxas = df_sem_extra["Prestação_Total"].sum(), df_sem_extra["Juros"].sum(), df_sem_extra["Taxas/Seguro"].sum()
+        data_ultima = data_inicio_input + timedelta(days=30.4375 * len(df_sem_extra))
+        st.markdown("<div class='metric-table'>" + "".join([f"<div class='metric-row'><span class='metric-label'>{label}</span><span class='metric-value'>{value}</span></div>" for label, value in [
+            ("Valor financiado", f"R$ {valor_financiado_input:,.2f}"), ("Total a ser pago", f"R$ {total_pagar:,.2f}"), ("Total de juros", f"R$ {total_juros:,.2f}"),
+            ("Total de taxas/seguros", f"R$ {total_taxas:,.2f}"), ("Taxa de juros", f"{taxa_juros_input:.2f}% (a.a)"), ("Quantidade de parcelas", len(df_sem_extra)),
+            ("Valor da primeira parcela", f"R$ {df_sem_extra.iloc[0]['Prestação_Total']:,.2f}"), ("Valor da última parcela", f"R$ {df_sem_extra.iloc[-1]['Prestação_Total']:,.2f}"),
+            ("Data da última parcela", data_ultima.strftime('%B de %Y')), ("Sistema de amortização", "SAC")]]) + "</div>", unsafe_allow_html=True)
+        st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
+        st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
+        st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
+        st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-valor_financiado = valor_imovel - entrada
-st.info(f"**Valor a ser Financiado:** R$ {valor_financiado:,.2f}  |  **Entrada:** R$ {entrada:,.2f} ({entrada/valor_imovel:.1%} do total)")
-
-st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
-
-if valor_financiado > 0:
-    prazo_meses, taxa_juros_mes = int(num_parcelas), (1 + taxa_juros / 100) ** (1/12) - 1
-    df_sem_extra = calcular_financiamento('prazo', valor_financiado, taxa_juros_mes, prazo_meses, 0.0)
-    df_com_extra = pd.DataFrame()
-    if amortizacao_extra > 0:
-        tipo = 'prazo' if tipo_amortizacao == "Reduzir prazo" else 'parcela'
-        df_com_extra = calcular_financiamento(tipo, valor_financiado, taxa_juros_mes, prazo_meses, amortizacao_extra)
-
-    st.header("Análise Comparativa")
-    
-    col_sem, col_com = st.columns(2)
-    with col_sem:
-        st.markdown("<div class='custom-metric-card'>", unsafe_allow_html=True)
-        st.markdown("<p class='section-header' style='margin-top:0; font-size: 1.5rem;'>Cenário Padrão</p>", unsafe_allow_html=True)
-        if not df_sem_extra.empty:
-            total_pagar, total_juros = df_sem_extra["Prestação_Total"].sum(), df_sem_extra["Juros"].sum()
-            st.markdown(f"<p class='metric-label'>Custo Total</p><div class='metric-value-container'><p class='metric-value'>R$ {total_pagar:,.2f}</p></div>", unsafe_allow_html=True)
-            st.markdown(f"<p class='metric-label'>Total em Juros</p><div class='metric-value-container'><p class='metric-value'>R$ {total_juros:,.2f}</p></div>", unsafe_allow_html=True)
-            st.markdown(f"<p class='metric-label'>Prazo Final</p><div class='metric-value-container'><p class='metric-value'>{len(df_sem_extra)} meses</p></div>", unsafe_allow_html=True)
-        st.markdown("</div>", unsafe_allow_html=True)
-    with col_com:
-        st.markdown("<div class='custom-metric-card'>", unsafe_allow_html=True)
-        st.markdown("<p class='section-header' style='margin-top:0; font-size: 1.5rem;'>Cenário com Amortização Extra</p>", unsafe_allow_html=True)
-        if not df_com_extra.empty:
-            total_pagar_extra, total_juros_extra = df_com_extra["Prestação_Total"].sum(), df_com_extra["Juros"].sum()
-            economia = total_pagar - total_pagar_extra
-            st.markdown(f"<p class='metric-label'>Custo Total</p><div class='metric-value-container'><p class='metric-value'>R$ {total_pagar_extra:,.2f}</p><p class='metric-delta'>- R$ {economia:,.2f}</p></div>", unsafe_allow_html=True)
-            st.markdown(f"<p class='metric-label'>Total em Juros</p><div class='metric-value-container'><p class='metric-value'>R$ {total_juros_extra:,.2f}</p></div>", unsafe_allow_html=True)
-            st.markdown(f"<p class='metric-label'>Prazo Final</p><div class='metric-value-container'><p class='metric-value'>{len(df_com_extra)} meses</p></div>", unsafe_allow_html=True)
-        else:
-            st.info("Nenhum cenário com amortização extra para comparar.")
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-    st.markdown("<hr class='styled-hr'>", unsafe_allow_html=True)
-    st.header("Análise Detalhada da Evolução")
-    
-    tab_saldo, tab_comp, tab_parcela, tab_pizza, tab_tabela = st.tabs(["📉 Saldo Devedor", "📊 Comp. Mensal", "📉 Evol. da Parcela", "🍕 Custo Total", "📋 Tabela"])
-    
-    def get_common_plotly_layout(y_title="", legend_title="", show_legend=True):
-        layout = go.Layout(height=500, paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font=dict(color=TEXT_COLOR),
-                           xaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR)),
-                           yaxis=dict(showgrid=False, zeroline=False, linecolor=BORDER_COLOR, tickformat=",.0f", tickfont=dict(color=SUBTLE_TEXT_COLOR), title_font=dict(color=SUBTLE_TEXT_COLOR), title_text=y_title),
-                           legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, title=legend_title, font=dict(color=SUBTLE_TEXT_COLOR)),
-                           margin=dict(l=20, r=20, t=50, b=20))
-        if not show_legend: layout.update(showlegend=False)
-        return layout
-
-    with tab_saldo:
-        fig = go.Figure(layout=get_common_plotly_layout(y_title="Saldo Devedor (R$)", legend_title="Cenário"))
-        fig.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Saldo_Devedor'], mode='lines', name='Padrão', line=dict(color=SUBTLE_TEXT_COLOR, width=2)))
-        if not df_com_extra.empty:
-            fig.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Saldo_Devedor'], mode='lines', name='Com Amortização', line=dict(color=SANTANDER_RED, width=2)))
-        st.plotly_chart(fig, use_container_width=True)
-        
-    with tab_comp:
-        fig = go.Figure(layout=get_common_plotly_layout(y_title="Valor da Parcela (R$)"))
-        fig.update_layout(barmode='stack', xaxis_title="Meses (primeiros 6 anos)")
-        df_view = df_sem_extra[df_sem_extra['Mês'] <= 72]
-        fig.add_trace(go.Bar(x=df_view['Mês'], y=df_view['Juros'], name='Juros', marker_color=SANTANDER_RED))
-        fig.add_trace(go.Bar(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização', marker_color=PRIMARY_BLUE))
-        st.plotly_chart(fig, use_container_width=True)
-
-    with tab_parcela:
-        fig = go.Figure(layout=get_common_plotly_layout(y_title="Valor (R$)"))
-        fig.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Prestação_Total'], mode='lines', name='Total (Padrão)', line=dict(color=SANTANDER_RED, width=2.5)))
-        fig.add_trace(go.Scatter(x=df_sem_extra['Mês'], y=df_sem_extra['Amortização'], mode='lines', name='Amortização (Padrão)', line=dict(color=PRIMARY_BLUE, width=2)))
-        if not df_com_extra.empty:
-            fig.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Prestação_Total'], mode='lines', name='Total (Com Amort.)', line=dict(color=SANTANDER_RED, width=2.5, dash='dash')))
-            fig.add_trace(go.Scatter(x=df_com_extra['Mês'], y=df_com_extra['Amortização'], mode='lines', name='Amortização (Com Amort.)', line=dict(color=PRIMARY_BLUE, width=2, dash='dash')))
-        st.plotly_chart(fig, use_container_width=True)
-        
-    with tab_pizza:
-        pizza_col_1, pizza_col_2 = st.columns(2)
-        with pizza_col_1:
-            st.subheader("Custo Total (Padrão)")
-            if not df_sem_extra.empty:
-                labels = ['Principal', 'Juros', 'Taxas/Seguro']; values = [df_sem_extra['Amortização'].sum(), df_sem_extra['Juros'].sum(), df_sem_extra['Taxas/Seguro'].sum()]
-                fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, marker_colors=[PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR], marker=dict(line=dict(color='white', width=2)), hoverinfo='label+percent+value')])
-                fig.update_layout(height=500, showlegend=True, paper_bgcolor='rgba(0,0,0,0)', font=dict(color=TEXT_COLOR))
-                st.plotly_chart(fig, use_container_width=True)
-        with pizza_col_2:
-            st.subheader("Custo Total (Com Amort.)")
-            if not df_com_extra.empty:
-                labels = ['Principal', 'Juros', 'Taxas/Seguro']; values = [df_com_extra['Amortização'].sum(), df_com_extra['Juros'].sum(), df_com_extra['Taxas/Seguro'].sum()]
-                fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.5, marker_colors=[PRIMARY_BLUE, SANTANDER_RED, BORDER_COLOR], marker=dict(line=dict(color='white', width=2)), hoverinfo='label+percent+value')])
-                fig.update_layout(height=500, showlegend=True, paper_bgcolor='rgba(0,0,0,0)', font=dict(color=TEXT_COLOR))
-                st.plotly_chart(fig, use_container_width=True)
-            else:
-                st.info("Nenhum cenário com amortização extra para comparar.")
-
-    with tab_tabela:
-        st.header("Tabela de Amortização Completa")
-        if not df_com_extra.empty:
-            st.subheader("Cenário com Amortização Extra")
-            st.dataframe(df_com_extra, use_container_width=True, height=500)
-        st.subheader("Cenário Padrão")
-        st.dataframe(df_sem_extra, use_container_width=True, height=500)
-else:
-    st.error("O 'Valor a ser Financiado' deve ser maior que zero. Ajuste os parâmetros da simulação.")
+with col_com:
+    st.markdown("<div class='card'>", unsafe_allow_html=True)
+    st.markdown("<p class='card-title'>Com amortização extra</p>", unsafe_allow_html=True)
+    if not df_com_extra.empty:
+        total_pagar_extra, total_juros_extra, total_taxas_extra = df_com_extra["Prestação_Total"].sum(), df_com_extra["Juros"].sum(), df_com_extra["Taxas/Seguro"].sum()
+        data_ultima_extra = data_inicio_input + timedelta(days=30.4375 * len(df_com_extra))
+        st.markdown("<div class='metric-table'>" + "".join([f"<div class='metric-row'><span class='metric-label'>{label}</span><span class='metric-value'>{value}</span></div>" for label, value in [
+            ("Valor financiado", f"R$ {valor_financiado_input:,.2f}"), ("Total a ser pago", f"R$ {total_pagar_extra:,.2f}"), ("Total de juros", f"R$ {total_juros_extra:,.2f}"),
+            ("Total de taxas/seguros", f"R$ {total_taxas_extra:,.2f}"), ("Taxa de juros", f"{taxa_juros_input:.2f}% (a.a)"), ("Quantidade de parcelas", len(df_com_extra)),
+            ("Valor da primeira parcela", f"R$ {df_com_extra.iloc[0]['Prestação_Total']:,.2f}"), ("Valor da última parcela", f"R$ {df_com_extra.iloc[-1]['Prestação_Total']:,.2f}"),
+            ("Data da última parcela", data_ultima_extra.strftime('%B de %Y')), ("Sistema de amortização", "SAC")]]) + "</div>", unsafe_allow_html=True)
+        st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
+        st.markdown("<p class='card-title' style='text-align:center; border:none; margin-top: 1rem;'>Composição das parcelas</p>", unsafe_allow_html=True)
+        st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
+        st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
+    else:
+        st.info("Insira um valor de amortização extra na barra lateral para ver a comparação.")
+    st.markdown("</div>", unsafe_allow_html=True)
