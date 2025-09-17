@@ -40,8 +40,8 @@ st.markdown("""
     
     /* Container animado para o título */
     .title-container {
-        border: 1px solid "white";
-        border-radius: 12px; /* Bordas mais arredondadas */
+        border: 2px solid "black";
+        border-radius: 20px; /* Bordas mais arredondadas */
         padding: 2rem; /* Aumentado o padding */
         margin: 2rem auto; /* Aumentado a margem */
         background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); /* Gradiente sutil */
@@ -51,7 +51,7 @@ st.markdown("""
         flex-direction: row; /* Mudado para row para posicionar logo à esquerda */
         align-items: center;
         justify-content: center;
-        gap: 0.2rem; /* Aumentado o gap entre logo e texto */
+        gap: 0.002rem; /* Aumentado o gap entre logo e texto */
         transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); /* Transição mais suave */
         height: 450px; /* Altura fixa conforme solicitado */
     }
@@ -62,8 +62,8 @@ st.markdown("""
     }
     
     .title-logo {
-        height: 300px; /* Altura compatível com container de 450px */
-        width: 300px; /* Largura proporcional */
+        height: 350px; /* Altura compatível com container de 450px */
+        width: 350px; /* Largura proporcional */
         object-fit: contain;
         flex-shrink: 0; /* Impede que o logo encolha */
     }
