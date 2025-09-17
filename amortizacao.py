@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
+import base64
 
 # -------------------------------
 # CONFIGURAÇÃO GERAL
@@ -26,20 +27,57 @@ def format_currency(value):
         return "R$ 0,00"
 
 # -------------------------------
-# ESTILOS SIMPLIFICADOS
+# ESTILOS MELHORADOS
 # -------------------------------
 st.markdown("""
     <style>
     .stApp {
         background-color: #f8f9fa;
     }
+    
+    /* Container animado para o título */
+    .title-container {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem auto;
+        background-color: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        animation: fadeInUp 0.8s ease-out;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        height: 15rem;
+    }
+    
+    .title-logo {
+        height: 3rem;
+        width: 3rem;
+        object-fit: contain;
+    }
+    
     .main-title {
-        font-size: 6rem;
+        font-size: 16px;
         font-weight: 700;
         color: #0d6efd;
-        text-align: center;
-        margin-bottom: 2rem;
+        margin: 0;
+        font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+        letter-spacing: 0.5px;
     }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
     .section-title {
         font-size: 6rem;
         font-weight: 600;
@@ -69,24 +107,73 @@ st.markdown("""
         font-weight: 700;
         color: #0d6efd;
     }
+    
+    /* Container da tabela com borda fina */
+    .metric-table-container {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 1rem;
+        background-color: white;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
     .metric-table {
         width: 100%;
-        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        position: relative;
     }
+    
+    /* Linha vertical separadora com gradiente */
+    .metric-table::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 10px;
+        bottom: 10px;
+        width: 2px;
+        background: linear-gradient(to bottom, 
+            transparent 0%, 
+            #0d6efd 20%, 
+            #EC0000 50%, 
+            #6c757d 80%, 
+            transparent 100%);
+        transform: translateX(-50%);
+    }
+    
     .metric-row {
         display: flex;
         justify-content: space-between;
         padding: 0.75rem 0;
         border-bottom: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+        position: relative;
     }
+    
     .metric-row:last-child {
         border-bottom: none;
     }
+    
+    /* Animação de hover nos dados */
+    .metric-row:hover {
+        background-color: #f8f9fa;
+        transform: translateX(5px);
+        border-radius: 4px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
     .metric-label {
         color: #6c757d;
+        flex: 1;
+        padding-right: 1rem;
     }
+    
     .metric-value {
         font-weight: 600;
+        flex: 1;
+        text-align: right;
+        padding-left: 1rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -123,18 +210,26 @@ def criar_grafico_pizza(dataframe):
     values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
     colors = ['#0d6efd', '#EC0000', '#6c757d']
     
+    # Calculando percentuais
+    total = sum(values)
+    percentuais = [f"{label}<br>{format_currency(value)}<br>{(value/total*100):.1f}%" for label, value in zip(labels, values)]
+    
     fig = go.Figure(data=[go.Pie(
         labels=labels, 
         values=values, 
         hole=.5, 
-        marker=dict(colors=colors),
+        marker=dict(colors=colors, line=dict(color='#F5F5DC', width=2)),
+        textinfo='label+percent+value',
+        texttemplate='%{label}<br>%{value:,.0f}<br>%{percent}',
         hovertemplate="<b>%{label}</b><br>%{value:,.2f} reais<br>%{percent}<extra></extra>"
     )])
     
     fig.update_layout(
-        height=400,
-        showlegend=True, 
-        margin=dict(l=20, r=20, t=20, b=20), 
+        title="Composição do Financiamento",
+        title_x=0.5,
+        height=450,
+        showlegend=False, 
+        margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)'
     )
@@ -152,11 +247,13 @@ def criar_grafico_barras(dataframe):
                          hovertemplate='<b>Mês %{x}</b><br>Taxas/Seguro: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
+        title="Evolução das Parcelas por Mês",
+        title_x=0.5,
         barmode='stack', 
-        height=400,
+        height=450,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
-        margin=dict(l=20, r=20, t=20, b=20), 
+        margin=dict(l=20, r=20, t=60, b=20), 
         xaxis=dict(title='Meses'), 
         yaxis=dict(title='Valor (R$)'),
         hovermode='x unified'
@@ -173,15 +270,20 @@ def criar_grafico_linha(dataframe):
     fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Prestação_Total'], name='Parcela', mode='lines', 
                              line=dict(color='#0d6efd', width=2.5),
                              hovertemplate='<b>Mês %{x}</b><br>Parcela: R$ %{y:,.2f}<extra></extra>'))
-    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Amortização'], name='Amortização', mode='lines', 
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Juros'], name='Juros', mode='lines', 
                              line=dict(color='#EC0000', width=2.5),
+                             hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Amortização'], name='Amortização', mode='lines', 
+                             line=dict(color='#6c757d', width=2.5),
                              hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
-        height=400,
+        title="Evolução de Juros, Amortização e Parcela",
+        title_x=0.5,
+        height=450,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
-        margin=dict(l=20, r=20, t=20, b=20), 
+        margin=dict(l=20, r=20, t=60, b=20), 
         xaxis=dict(title='Meses'), 
         yaxis=dict(title='Valor (R$)')
     )
@@ -193,7 +295,7 @@ def criar_grafico_linha(dataframe):
 # -------------------------------
 # PÁGINA PRINCIPAL
 # -------------------------------
-st.markdown('<p class="main-title">🏦 Simulação de Financiamento e Amortização</p>', unsafe_allow_html=True)
+st.markdown('<div class="title-container"><img src="data:image/png;base64,' + base64.b64encode(open("casa.png", "rb").read()).decode() + '" class="title-logo" alt="Logo"><p class="main-title">🏦 Simulação de Financiamento e Amortização</p></div>', unsafe_allow_html=True)
 
 # Seção de parâmetros
 with st.expander("Configurar Parâmetros da Simulação", expanded=True):
@@ -264,7 +366,7 @@ if 'simular' in st.session_state and st.session_state.simular:
             ("Sistema de amortização", "SAC")
         ]
         html = "".join([f"<div class='metric-row'><span class='metric-label'>{l}</span><span class='metric-value'>{v}</span></div>" for l,v in dados])
-        return f"<div class='metric-table'>{html}</div>"
+        return f"<div class='metric-table-container'><div class='metric-table'>{html}</div></div>"
 
     with col_sem:
         st.markdown('<p class="section-title">📋 Sem Amortização Extra</p>', unsafe_allow_html=True)
