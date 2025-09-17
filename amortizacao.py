@@ -14,7 +14,20 @@ st.set_page_config(
 )
 
 # -------------------------------
-# ESTILOS E CORES
+# FUNÇÃO DE FORMATAÇÃO DE MOEDA BRASILEIRA
+# -------------------------------
+def format_currency(value):
+    """Formata valores como moeda brasileira (R$ 1.234,56)"""
+    if pd.isna(value) or value == 0:
+        return "R$ 0,00"
+    try:
+        value = float(value)
+        return f"R$ {value:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    except:
+        return "R$ 0,00"
+
+# -------------------------------
+# ESTILOS E CORES (SIMPLIFICADOS)
 # -------------------------------
 PRIMARY_BLUE = "#0d6efd"
 SANTANDER_RED = "#EC0000"
@@ -36,7 +49,7 @@ st.markdown(f"""
     }}
     
     .stApp {{
-        background: linear-gradient(135deg, {BACKGROUND_COLOR} 0%, #e8f4fd 100%);
+        background: {BACKGROUND_COLOR};
         color: {TEXT_COLOR};
     }}
     
@@ -52,7 +65,7 @@ st.markdown(f"""
     [data-testid="stExpander"] summary {{
         position: relative;
         padding: 1.5rem 2rem;
-        background: linear-gradient(135deg, {PRIMARY_BLUE} 0%, #4dabf7 100%);
+        background: {PRIMARY_BLUE};
         color: white;
         font-weight: 600;
         font-size: 1.1rem;
@@ -110,8 +123,7 @@ st.markdown(f"""
         box-shadow: 0 8px 32px {SHADOW_COLOR};
         margin-bottom: 2rem;
         height: 100%;
-        border: 1px solid rgba(255,255,255,0.2);
-        backdrop-filter: blur(10px);
+        border: 1px solid {BORDER_COLOR};
         position: relative;
         overflow: hidden;
     }}
@@ -123,7 +135,7 @@ st.markdown(f"""
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, {PRIMARY_BLUE} 0%, {SUCCESS_GREEN} 50%, {SANTANDER_RED} 100%);
+        background: {PRIMARY_BLUE};
     }}
     
     .card-title {{
@@ -158,7 +170,7 @@ st.markdown(f"""
         border: 1px solid {BORDER_COLOR};
         border-radius: 12px;
         text-align: center;
-        background: linear-gradient(135deg, {COMPONENT_BACKGROUND} 0%, {LIGHT_BLUE} 100%);
+        background: {COMPONENT_BACKGROUND};
         transition: all 0.3s ease;
         box-shadow: 0 4px 16px rgba(13, 110, 253, 0.1);
     }}
@@ -259,14 +271,11 @@ st.markdown(f"""
     
     /* Título principal */
     h1 {{
-        background: linear-gradient(135deg, {PRIMARY_BLUE} 0%, {SUCCESS_GREEN} 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: {PRIMARY_BLUE};
         text-align: center;
         font-weight: 800;
         font-size: 2.5rem;
         margin-bottom: 2rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
     }}
     
     /* Melhorando as colunas */
@@ -324,7 +333,7 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
     return pd.DataFrame(dados)
 
 # -------------------------------
-# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS (PLOTLY) - MELHORADAS
+# FUNÇÕES DE CRIAÇÃO DE GRÁFICOS (PLOTLY) - COM ALTURA AUMENTADA
 # -------------------------------
 def criar_grafico_pizza(dataframe):
     if dataframe.empty: return go.Figure()
@@ -339,13 +348,16 @@ def criar_grafico_pizza(dataframe):
         hole=.5, 
         marker=dict(
             colors=colors,
-            line=dict(color='white', width=2)  # strokewidth=2
+            line=dict(color='white', width=2)
         ),
-        hovertemplate="<b>%{label}</b><br>R$ %{value:,.2f}<br>%{percent}<extra></extra>"
+        hovertemplate="<b>%{label}</b><br>%{value:,.2f} reais<br>%{percent}<extra></extra>",
+        textinfo='label+percent',
+        texttemplate='<b>%{label}</b><br>%{percent}',
+        insidetextorientation='radial'
     )])
     
     fig.update_layout(
-        height=300, 
+        height=450,  # Aumentado de 300 para 450
         showlegend=True, 
         legend=dict(
             orientation="h", 
@@ -372,20 +384,28 @@ def criar_grafico_barras(dataframe):
         return go.Figure()
     
     fig = go.Figure()
-    fig.add_trace(go.Bar(name='Amortização', x=df_view['Mês'], y=df_view['Amortização'], marker_color=PRIMARY_BLUE))
-    fig.add_trace(go.Bar(name='Juros', x=df_view['Mês'], y=df_view['Juros'], marker_color=SANTANDER_RED))
-    fig.add_trace(go.Bar(name='Taxas/Seguro', x=df_view['Mês'], y=df_view['Taxas/Seguro'], marker_color='#aaaaaa'))
+    fig.add_trace(go.Bar(name='Amortização', x=df_view['Mês'], y=df_view['Amortização'], marker_color=PRIMARY_BLUE,
+                         hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Bar(name='Juros', x=df_view['Mês'], y=df_view['Juros'], marker_color=SANTANDER_RED,
+                         hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Bar(name='Taxas/Seguro', x=df_view['Mês'], y=df_view['Taxas/Seguro'], marker_color='#aaaaaa',
+                         hovertemplate='<b>Mês %{x}</b><br>Taxas/Seguro: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
         barmode='stack', 
-        height=300, 
+        height=450,  # Aumentado de 300 para 450
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), 
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=20, b=20), 
         xaxis=dict(showgrid=False, title='Meses'), 
-        yaxis=dict(showgrid=False, title='')
+        yaxis=dict(showgrid=False, title=''),
+        hovermode='x unified'
     )
+    
+    # Formatar eixo Y para mostrar valores em reais
+    fig.update_yaxes(tickprefix='R$ ', tickformat=',.2f')
+    
     return fig
 
 def criar_grafico_linha(dataframe):
@@ -399,18 +419,26 @@ def criar_grafico_linha(dataframe):
         return go.Figure()
     
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Prestação_Total'], name='Parcela', mode='lines', line=dict(color=PRIMARY_BLUE, width=2.5)))
-    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização mensal', mode='lines', line=dict(color=SANTANDER_RED, width=2.5)))
+    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Prestação_Total'], name='Parcela', mode='lines', 
+                             line=dict(color=PRIMARY_BLUE, width=2.5),
+                             hovertemplate='<b>Mês %{x}</b><br>Parcela: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Scatter(x=df_view['Mês'], y=df_view['Amortização'], name='Amortização mensal', mode='lines', 
+                             line=dict(color=SANTANDER_RED, width=2.5),
+                             hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
-        height=300, 
+        height=450,  # Aumentado de 300 para 450
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5), 
-        paper_bgcolor='rgba(0,0,0,0)', 
+        paper_bgcolor='rgada(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=20, b=20), 
         xaxis=dict(showgrid=False, title='Meses'), 
         yaxis=dict(showgrid=False, title='')
     )
+    
+    # Formatar eixo Y para mostrar valores em reais
+    fig.update_yaxes(tickprefix='R$ ', tickformat=',.2f')
+    
     return fig
 
 # -------------------------------
@@ -456,7 +484,7 @@ else:
 with styled_container("card"):
     st.markdown("<p class='card-title'>📊 Parâmetros de Financiamento</p>", unsafe_allow_html=True)
     st.markdown("<div class='param-grid'>"
-                f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>R$ {valor_financiado_input:,.2f}</p></div>"
+                f"<div class='param-box'><p class='param-label'>Empréstimo</p><p class='param-value'>{format_currency(valor_financiado_input)}</p></div>"
                 f"<div class='param-box'><p class='param-label'>Início</p><p class='param-value'>{data_inicio_input.strftime('%B de %Y')}</p></div>"
                 f"<div class='param-box'><p class='param-label'>Tabela</p><p class='param-value'>SAC</p></div>"
                 f"<div class='param-box'><p class='param-label'>Taxa de juros</p><p class='param-value'>{taxa_juros_input:.2f}%</p></div>"
@@ -471,17 +499,21 @@ if 'simular' in st.session_state and st.session_state.simular:
     def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
         total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
         data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
+        
+        # Calcular total amortizado (deve ser igual ao valor financiado)
+        total_amortizado = dataframe["Amortização"].sum()
+        
         dados = [
-            ("Valor financiado", f"R$ {valor_financiado:,.2f}"), 
-            ("Total a ser pago", f"R$ {total_pagar:,.2f}"),
-            ("Total amortizado", "--"),
-            ("Total de juros", f"R$ {total_juros:,.2f}"),
-            ("Total de taxas/seguros", f"R$ {total_taxas:,.2f}"),
+            ("Valor financiado", format_currency(valor_financiado)), 
+            ("Total a ser pago", format_currency(total_pagar)),
+            ("Total amortizado", format_currency(total_amortizado)),
+            ("Total de juros", format_currency(total_juros)),
+            ("Total de taxas/seguros", format_currency(total_taxas)),
             ("Correção", "R$ 0,00"),
             ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),
-            ("Quantidade de parcelas", len(dataframe)),
-            ("Valor da primeira parcela", f"R$ {dataframe.iloc[0]['Prestação_Total']:,.2f}"),
-            ("Valor da última parcela", f"R$ {dataframe.iloc[-1]['Prestação_Total']:,.2f}"),
+            ("Quantidade de parcelas", f"{len(dataframe)}"),
+            ("Valor da primeira parcela", format_currency(dataframe.iloc[0]['Prestação_Total'])),
+            ("Valor da última parcela", format_currency(dataframe.iloc[-1]['Prestação_Total'])),
             ("Data da última parcela", data_ultima.strftime('%B de %Y')),
             ("Sistema de amortização", "SAC")
         ]
