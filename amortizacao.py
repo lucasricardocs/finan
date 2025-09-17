@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
@@ -354,7 +353,7 @@ st.markdown(
 title-container"><img src="data:image/png;base64,
     " + base64.b64encode(open("casa.png", "rb").read()).decode() + 
     "" class="title-logo" alt="Logo">
-    <p class="main-title">🏦 Simulação de Financiamento e Amortização</p>
+    <p class="main-title">Simulação de Financiamento e Amortização</p>
     <p class="subtitle">Transformando sonhos em realidade financeira</p>
     </div>
     """, unsafe_allow_html=True)
