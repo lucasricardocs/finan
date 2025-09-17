@@ -26,156 +26,99 @@ def format_currency(value):
         return "R$ 0,00"
 
 # -------------------------------
-# ESTILOS SIMPLIFICADOS
+# ESTILOS APRIMORADOS
 # -------------------------------
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap');
-    
     .stApp {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        font-family: 'Poppins', sans-serif;
+        background-color: #f8f9fa;
     }
-    
     .main-title {
-        font-size: 4rem;
+        font-size: 3rem;
         font-weight: 800;
-        background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24);
-        background-size: 300% 300%;
+        text-align: center;
+        margin-bottom: 2rem;
+        background: linear-gradient(90deg, #0d6efd, #EC0000);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin: 2rem 0;
-        animation: gradient-animation 3s ease infinite;
-        text-shadow: 0 0 30px rgba(255,255,255,0.3);
+        animation: pulse 2s infinite;
     }
-    
-    @keyframes gradient-animation {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.02); }
+        100% { transform: scale(1); }
     }
-    
     .section-title {
         font-size: 1.8rem;
-        font-weight: 600;
-        color: #2c3e50;
+        font-weight: 700;
+        color: #212529;
         margin-bottom: 1rem;
-        text-align: center;
-        position: relative;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #0d6efd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
-    
+    .economy-badge {
+        font-size: 0.9rem;
+        color: #EC0000;
+        font-weight: 600;
+        background-color: rgba(236, 0, 0, 0.1);
+        padding: 0.3rem 0.8rem;
+        border-radius: 15px;
+        border: 1px solid rgba(236, 0, 0, 0.3);
+    }
     .param-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1rem;
         margin-bottom: 1.5rem;
     }
-    
     .param-box {
         padding: 1rem;
         border: 1px solid #dee2e6;
         border-radius: 8px;
         text-align: center;
         background-color: white;
+        transition: all 0.3s ease;
     }
-    
+    .param-box:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
     .param-label {
         font-size: 0.9rem;
         color: #6c757d;
         margin-bottom: 0.5rem;
     }
-    
     .param-value {
         font-size: 1.1rem;
         font-weight: 700;
         color: #0d6efd;
     }
-    
-    .results-container {
-        background: white;
-        border-radius: 15px;
-        padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        margin: 2rem 0;
-        position: relative;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .results-container:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-    }
-    
-    .results-container::before {
-        content: '';
-        position: absolute;
-        left: 50%;
-        top: 0;
-        bottom: 0;
-        width: 2px;
-        background: linear-gradient(to bottom, #4ecdc4, #44a08d);
-        transform: translateX(-50%);
-        z-index: 1;
-    }
-    
-    .column-left, .column-right {
-        position: relative;
-        z-index: 2;
-    }
-    
-    .savings-badge {
-        position: absolute;
-        top: 1rem;
-        right: 1rem;
-        background: #e74c3c;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
-        animation: pulse-savings 2s infinite;
-    }
-    
-    @keyframes pulse-savings {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    
     .metric-table {
         width: 100%;
         margin-bottom: 2rem;
     }
-    
     .metric-row {
         display: flex;
         justify-content: space-between;
         padding: 0.75rem 0;
         border-bottom: 1px solid #dee2e6;
-        transition: background-color 0.2s ease;
     }
-    
-    .metric-row:hover {
-        background-color: #f8f9fa;
-        border-radius: 5px;
-        padding-left: 1rem;
-        padding-right: 1rem;
-        margin: 0 -1rem;
-    }
-    
     .metric-row:last-child {
         border-bottom: none;
     }
-    
     .metric-label {
         color: #6c757d;
     }
-    
     .metric-value {
         font-weight: 600;
-        color: #2c3e50;
+    }
+    .vertical-divider {
+        border-left: 2px solid #dee2e6;
+        height: 100%;
+        margin: 0 1rem;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -193,7 +136,7 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
         amortizacao = amortizacao_base if tipo_calculo == 'prazo' else saldo_devedor / prazo_restante
         juros, seguro, taxa_admin = saldo_devedor * taxa_juros_mes, saldo_devedor * 0.0004, 25.0
         amortizacao_total = amortizacao + amortizacao_extra_mensal
-        prestacao_total = juros + amortizacao_total + seguro + taxa_admin
+        prestacao_total = juros + amortizacao_total + seguro + taxi_admin
         saldo_devedor -= amortizacao_total
         if saldo_devedor < 0:
             amortizacao_total += saldo_devedor; prestacao_total += saldo_devedor; saldo_devedor = 0
@@ -205,174 +148,93 @@ def calcular_financiamento(tipo_calculo, valor_financiado, taxa_juros_mes, prazo
 # -------------------------------
 # FUNÇÕES DE CRIAÇÃO DE GRÁFICOS
 # -------------------------------
-def criar_grafico_pizza(dataframe, titulo):
+def criar_grafico_pizza(dataframe):
     if dataframe.empty: return go.Figure()
     
     labels = ['Principal', 'Juros', 'Taxas/Seguro']
     values = [dataframe['Amortização'].sum(), dataframe['Juros'].sum(), dataframe['Taxas/Seguro'].sum()]
-    colors = ['#0d6efd', '#e74c3c', '#6c757d']
-    
-    # Calcular porcentagens
-    total = sum(values)
-    percentages = [(value/total)*100 for value in values]
-    
-    # Labels com nome e porcentagem
-    custom_labels = [f"{label}<br>{percent:.1f}%" for label, percent in zip(labels, percentages)]
+    colors = ['#0d6efd', '#EC0000', '#6c757d']
     
     fig = go.Figure(data=[go.Pie(
-        labels=custom_labels,
+        labels=labels, 
         values=values, 
         hole=.4,
-        marker=dict(
-            colors=colors,
-            line=dict(color='white', width=2)  # strokewidth=2
-        ),
-        textinfo='label',
-        textposition='outside',
-        textfont=dict(size=12, family='Poppins'),
-        showlegend=False,
-        hovertemplate="<b>%{label}</b><br>%{value:,.2f} reais<extra></extra>"
+        marker=dict(colors=colors, line=dict(color='white', width=2)),
+        textinfo='label+percent',
+        textposition='inside',
+        hovertemplate="<b>%{label}</b><br>Valor: R$ %{value:,.2f}<br>Percentual: %{percent}<extra></extra>"
     )])
     
     fig.update_layout(
-        title={
-            'text': titulo,
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': {'size': 16, 'family': 'Poppins', 'color': '#2c3e50'}
-        },
         height=400,
+        title_text="Distribuição do Total Pago",
+        title_x=0.5,
+        title_font_size=16,
+        showlegend=False,
         margin=dict(l=20, r=20, t=60, b=20), 
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)'
     )
     return fig
 
-def criar_grafico_barras(dataframe, titulo):
+def criar_grafico_barras(dataframe):
     if dataframe.empty: return go.Figure()
     
     fig = go.Figure()
-    fig.add_trace(go.Bar(
-        name='Amortização', 
-        x=dataframe['Mês'], 
-        y=dataframe['Amortização'], 
-        marker_color='#0d6efd',
-        text=[f'{val:,.0f}' for val in dataframe['Amortização']],
-        textposition='inside',
-        textfont=dict(color='white', size=10),
-        showlegend=False,
-        hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'
-    ))
-    fig.add_trace(go.Bar(
-        name='Juros', 
-        x=dataframe['Mês'], 
-        y=dataframe['Juros'], 
-        marker_color='#e74c3c',
-        text=[f'{val:,.0f}' for val in dataframe['Juros']],
-        textposition='inside',
-        textfont=dict(color='white', size=10),
-        showlegend=False,
-        hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'
-    ))
-    fig.add_trace(go.Bar(
-        name='Taxas/Seguro', 
-        x=dataframe['Mês'], 
-        y=dataframe['Taxas/Seguro'], 
-        marker_color='#6c757d',
-        text=[f'{val:,.0f}' for val in dataframe['Taxas/Seguro']],
-        textposition='inside',
-        textfont=dict(color='white', size=10),
-        showlegend=False,
-        hovertemplate='<b>Mês %{x}</b><br>Taxas/Seguro: R$ %{y:,.2f}<extra></extra>'
-    ))
+    fig.add_trace(go.Bar(name='Amortização', x=dataframe['Mês'], y=dataframe['Amortização'], marker_color='#0d6efd',
+                         hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Bar(name='Juros', x=dataframe['Mês'], y=dataframe['Juros'], marker_color='#EC0000',
+                         hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Bar(name='Taxas/Seguro', x=dataframe['Mês'], y=dataframe['Taxas/Seguro'], marker_color='#6c757d',
+                         hovertemplate='<b>Mês %{x}</b><br>Taxas/Seguro: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
-        title={
-            'text': titulo,
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': {'size': 16, 'family': 'Poppins', 'color': '#2c3e50'}
-        },
         barmode='stack', 
         height=400,
+        title_text="Composição das Parcelas ao Longo do Tempo",
+        title_x=0.5,
+        title_font_size=16,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
-        xaxis=dict(title='Meses', titlefont=dict(family='Poppins')), 
-        yaxis=dict(title='Valor (R$)', titlefont=dict(family='Poppins')),
-        hovermode='x unified'
+        xaxis=dict(title='Meses'), 
+        yaxis=dict(title='Valor (R$)'),
+        hovermode='x unified',
+        showlegend=False
     )
     
-    fig.update_yaxes(tickprefix='R$ ', tickformat=',.0f')
+    fig.update_yaxes(tickprefix='R$ ', tickformat=',.2f')
     
     return fig
 
-def criar_grafico_linha(dataframe, titulo):
+def criar_grafico_linha(dataframe):
     if dataframe.empty: return go.Figure()
     
     fig = go.Figure()
-    
-    # Parcela
-    fig.add_trace(go.Scatter(
-        x=dataframe['Mês'], 
-        y=dataframe['Prestação_Total'], 
-        name='Parcela', 
-        mode='lines+markers',
-        line=dict(color='#0d6efd', width=3),
-        marker=dict(size=6, color='#0d6efd'),
-        text=[f'R$ {val:,.0f}' for val in dataframe['Prestação_Total']],
-        textposition='top center',
-        textfont=dict(size=10, family='Poppins'),
-        showlegend=False,
-        hovertemplate='<b>Mês %{x}</b><br>Parcela: R$ %{y:,.2f}<extra></extra>'
-    ))
-    
-    # Amortização
-    fig.add_trace(go.Scatter(
-        x=dataframe['Mês'], 
-        y=dataframe['Amortização'], 
-        name='Amortização', 
-        mode='lines+markers',
-        line=dict(color='#2ecc71', width=3),
-        marker=dict(size=6, color='#2ecc71'),
-        text=[f'R$ {val:,.0f}' for val in dataframe['Amortização']],
-        textposition='middle right',
-        textfont=dict(size=10, family='Poppins'),
-        showlegend=False,
-        hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'
-    ))
-    
-    # Juros
-    fig.add_trace(go.Scatter(
-        x=dataframe['Mês'], 
-        y=dataframe['Juros'], 
-        name='Juros', 
-        mode='lines+markers',
-        line=dict(color='#e74c3c', width=3),
-        marker=dict(size=6, color='#e74c3c'),
-        text=[f'R$ {val:,.0f}' for val in dataframe['Juros']],
-        textposition='bottom center',
-        textfont=dict(size=10, family='Poppins'),
-        showlegend=False,
-        hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'
-    ))
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Prestação_Total'], name='Parcela', mode='lines', 
+                             line=dict(color='#0d6efd', width=2.5),
+                             hovertemplate='<b>Mês %{x}</b><br>Parcela: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Amortização'], name='Amortização', mode='lines', 
+                             line=dict(color='#EC0000', width=2.5),
+                             hovertemplate='<b>Mês %{x}</b><br>Amortização: R$ %{y:,.2f}<extra></extra>'))
+    fig.add_trace(go.Scatter(x=dataframe['Mês'], y=dataframe['Juros'], name='Juros', mode='lines', 
+                             line=dict(color='#ff7f0e', width=2.5),
+                             hovertemplate='<b>Mês %{x}</b><br>Juros: R$ %{y:,.2f}<extra></extra>'))
     
     fig.update_layout(
-        title={
-            'text': titulo,
-            'x': 0.5,
-            'xanchor': 'center',
-            'font': {'size': 16, 'family': 'Poppins', 'color': '#2c3e50'}
-        },
         height=400,
+        title_text="Evolução dos Valores ao Longo do Tempo",
+        title_x=0.5,
+        title_font_size=16,
         paper_bgcolor='rgba(0,0,0,0)', 
         plot_bgcolor='rgba(0,0,0,0)', 
         margin=dict(l=20, r=20, t=60, b=20), 
-        xaxis=dict(title='Meses', titlefont=dict(family='Poppins')), 
-        yaxis=dict(title='Valor (R$)', titlefont=dict(family='Poppins'))
+        xaxis=dict(title='Meses'), 
+        yaxis=dict(title='Valor (R$)'),
+        showlegend=False
     )
     
-    fig.update_yaxes(tickprefix='R$ ', tickformat=',.0f')
+    fig.update_yaxes(tickprefix='R$ ', tickformat=',.2f')
     
     return fig
 
@@ -425,65 +287,65 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+st.divider()
+
 # Seção de resultados
 if 'simular' in st.session_state and st.session_state.simular:
-    def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
-        total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
-        data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
-        total_amortizado = dataframe["Amortização"].sum()
-        
-        dados = [
-            ("Valor financiado", format_currency(valor_financiado)), 
-            ("Total a ser pago", format_currency(total_pagar)),
-            ("Total amortizado", format_currency(total_amortizado)),
-            ("Total de juros", format_currency(total_juros)),
-            ("Total de taxas/seguros", format_currency(total_taxas)),
-            ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),
-            ("Quantidade de parcelas", len(dataframe)),
-            ("Valor da primeira parcela", format_currency(dataframe.iloc[0]['Prestação_Total'])),
-            ("Valor da última parcela", format_currency(dataframe.iloc[-1]['Prestação_Total'])),
-            ("Data da última parcela", data_ultima.strftime('%B de %Y')),
-            ("Sistema de amortização", "SAC")
-        ]
-        html = "".join([f"<div class='metric-row'><span class='metric-label'>{l}</span><span class='metric-value'>{v}</span></div>" for l,v in dados])
-        return f"<div class='metric-table'>{html}</div>"
-
-    # Cálculo da economia
-    economia_total = 0
-    if not df_sem_extra.empty and not df_com_extra.empty:
-        total_sem_extra = df_sem_extra["Prestação_Total"].sum()
-        total_com_extra = df_com_extra["Prestação_Total"].sum()
-        economia_total = total_sem_extra - total_com_extra
-
-    # Container com separador vertical
-    st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    
-    # Badge de economia
-    if economia_total > 0:
-        st.markdown(f'<div class="savings-badge">💰 Economia: {format_currency(economia_total)}</div>', unsafe_allow_html=True)
-    
-    col_sem, col_com = st.columns(2)
+    col_sem, col_sep, col_com = st.columns([5, 0.5, 5])
     
     with col_sem:
-        st.markdown('<div class="column-left">', unsafe_allow_html=True)
         st.markdown('<p class="section-title">📋 Sem Amortização Extra</p>', unsafe_allow_html=True)
         if not df_sem_extra.empty:
             st.markdown(gerar_tabela_html(df_sem_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
-            st.plotly_chart(criar_grafico_pizza(df_sem_extra, "Composição do Financiamento"), use_container_width=True)
-            st.plotly_chart(criar_grafico_barras(df_sem_extra, "Evolução das Parcelas"), use_container_width=True)
-            st.plotly_chart(criar_grafico_linha(df_sem_extra, "Evolução dos Valores"), use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.plotly_chart(criar_grafico_pizza(df_sem_extra), use_container_width=True)
+            st.divider()
+            st.plotly_chart(criar_grafico_barras(df_sem_extra), use_container_width=True)
+            st.plotly_chart(criar_grafico_linha(df_sem_extra), use_container_width=True)
 
-    with col_com:
-        st.markdown('<div class="column-right">', unsafe_allow_html=True)
-        st.markdown('<p class="section-title">🚀 Com Amortização Extra</p>', unsafe_allow_html=True)
-        if not df_com_extra.empty:
-            st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
-            st.plotly_chart(criar_grafico_pizza(df_com_extra, "Composição do Financiamento"), use_container_width=True)
-            st.plotly_chart(criar_grafico_barras(df_com_extra, "Evolução das Parcelas"), use_container_width=True)
-            st.plotly_chart(criar_grafico_linha(df_com_extra, "Evolução dos Valores"), use_container_width=True)
-        else:
-            st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
-        st.markdown('</div>', unsafe_allow_html=True)
+    with col_sep:
+        st.markdown('<div class="vertical-divider"></div>', unsafe_allow_html=True)
     
-    st.markdown('</div>', unsafe_allow_html=True)
+    with col_com:
+        if not df_com_extra.empty:
+            # Calcular economia
+            total_sem_extra = df_sem_extra["Prestação_Total"].sum()
+            total_com_extra = df_com_extra["Prestação_Total"].sum()
+            economia = total_sem_extra - total_com_extra
+            
+            st.markdown(f'''
+                <div class="section-title">
+                    🚀 Com Amortização Extra
+                    <span class="economy-badge">Economizou: {format_currency(economia)}</span>
+                </div>
+            ''', unsafe_allow_html=True)
+            
+            st.markdown(gerar_tabela_html(df_com_extra, valor_financiado_input, taxa_juros_input, data_inicio_input), unsafe_allow_html=True)
+            st.plotly_chart(criar_grafico_pizza(df_com_extra), use_container_width=True)
+            st.divider()
+            st.plotly_chart(criar_grafico_barras(df_com_extra), use_container_width=True)
+            st.plotly_chart(criar_grafico_linha(df_com_extra), use_container_width=True)
+        else:
+            st.markdown('<p class="section-title">🚀 Com Amortização Extra</p>', unsafe_allow_html=True)
+            st.info("💡 Insira um valor de amortização extra para ver a comparação detalhada!")
+
+# Função para gerar tabela HTML (mantida do código anterior)
+def gerar_tabela_html(dataframe, valor_financiado, taxa_juros, data_inicio):
+    total_pagar, total_juros, total_taxas = dataframe["Prestação_Total"].sum(), dataframe["Juros"].sum(), dataframe["Taxas/Seguro"].sum()
+    data_ultima = data_inicio + timedelta(days=30.4375 * len(dataframe))
+    total_amortizado = dataframe["Amortização"].sum()
+    
+    dados = [
+        ("Valor financiado", format_currency(valor_financiado)), 
+        ("Total a ser pago", format_currency(total_pagar)),
+        ("Total amortizado", format_currency(total_amortizado)),
+        ("Total de juros", format_currency(total_juros)),
+        ("Total de taxas/seguros", format_currency(total_taxas)),
+        ("Taxa de juros", f"{taxa_juros:.2f}% (a.a)"),
+        ("Quantidade de parcelas", len(dataframe)),
+        ("Valor da primeira parcela", format_currency(dataframe.iloc[0]['Prestação_Total'])),
+        ("Valor da última parcela", format_currency(dataframe.iloc[-1]['Prestação_Total'])),
+        ("Data da última parcela", data_ultima.strftime('%B de %Y')),
+        ("Sistema de amortização", "SAC")
+    ]
+    html = "".join([f"<div class='metric-row'><span class='metric-label'>{l}</span><span class='metric-value'>{v}</span></div>" for l,v in dados])
+    return f"<div class='metric-table'>{html}</div>"
